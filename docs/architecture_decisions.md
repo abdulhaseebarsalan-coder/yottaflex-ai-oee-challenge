@@ -423,9 +423,15 @@ The OEE calculator consumes validation findings without ground truth and execute
 - A full clean baseline (`skip_anomalies=True`, identical seed) produces **0 validation findings** across all 17 rules.
 - Comparing mutated OEE aggregates against the clean baseline confirms that unaffected machine-shifts match bitwise-identically, while affected machine-shifts recover cleanly or differ strictly in the documented triage manner.
 
-### 13.6 Parameterized Anomaly Distribution
-- Anomaly injector parameterizes anomaly counts (10 per type = 50 total for full profile; 1 per type = 5 total for starter profile).
-- Detections and injections are constrained to distinct `(machine_id, shift_id)` tuples, ensuring anomalies never collide on the same machine-shift.
+### 13.6 Parameterized Anomaly Distribution & Stratified Horizon Sampling
+- **Stratified Seeded Sampling**: Rather than selecting the "first N candidates" (which clustered all anomalies in Week 1), the anomaly injection engine partitions the 90-day horizon into temporal strata ($N=10$ intervals of ~9 days). In each stratum, a candidate is selected deterministically using the fixed seed RNG (`self.rng`).
+- **Full-Horizon Coverage**: Anomalies span Weeks 1 through 12 across distinct machine-shifts, and EC-04 cycle time anomalies hit work orders across all 5 production lines throughout the entire calendar horizon.
+- **Strict Machine-Shift Isolation**: Detections and injections are constrained to distinct `(machine_id, shift_id)` tuples, ensuring anomalies never collide on the same machine-shift.
+
+### 13.7 Chronological Event ID Sequencing & Leakage Prevention
+- **In-Place Sequence Realignment**: Injected state events (such as the overlapping breakdown in EC-05) are inserted into the event sequence, and all state events for each machine are sorted strictly by `(start_time, 0 if PLANNED_DOWNTIME else 1, end_time)`.
+- **Sequential Monotonicity**: Sequential canonical IDs `EVT-{machine_id}-{seq:06d}` are reassigned from $1$ to $N$ with zero gaps. An injected event on Day 1 receives an ID matching its chronological place on Day 1 (e.g. `000032`), preventing artificial sequence number leaks (e.g. sequence 3980 appearing on Day 1).
+- **Ground Truth Mapping**: Ground truth references (`record_id`, `related_record_id`) are mapped via the canonical ID translation dictionary, preserving 100% referential integrity with the telemetry tables.
 
 ---
 

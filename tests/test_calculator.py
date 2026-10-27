@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from yotta_oee.calculator.aggregator import OEECalculatorEngine
+from yotta_oee.domain import AggregateStatus, ValidationRuleId
 from yotta_oee.generator.engine import DataGenerationEngine
 
 
@@ -117,6 +118,20 @@ class TestOEECalculatorEngine:
         clean_by_key = {(a.shift_id, a.machine_id): a for a in clean_aggs}
         mut_by_key = {(a.shift_id, a.machine_id): a for a in mut_aggs}
 
+        import polars as pl
+        mut_events = pl.read_csv(mutated_dir / "state_events.csv")
+        mut_counts = pl.read_csv(mutated_dir / "production_counts.csv")
+        mut_qc = pl.read_csv(mutated_dir / "quality_inspections.csv")
+
+        evt_map = {r["event_id"]: (r["shift_id"], r["machine_id"]) for r in mut_events.iter_rows(named=True)}
+        cnt_map = {r["count_id"]: (r["shift_id"], r["machine_id"]) for r in mut_counts.iter_rows(named=True)}
+        qc_map = {r["inspection_id"]: (r["shift_id"], r["machine_id"]) for r in mut_qc.iter_rows(named=True)}
+
+        # Map findings by rule to affected (shift_id, machine_id) keys
+        ec01_keys = { evt_map[f.record_id] for f in mut_summary.findings if f.rule_id == ValidationRuleId.VAL_TIME_002 and f.record_id in evt_map }
+        ec02_keys = { cnt_map[f.record_id] for f in mut_summary.findings if f.rule_id == ValidationRuleId.VAL_COUNT_001 and f.record_id in cnt_map }
+        ec03_keys = { qc_map[f.record_id] for f in mut_summary.findings if f.rule_id == ValidationRuleId.VAL_QUAL_001 and f.record_id in qc_map }
+
         for key, clean_agg in clean_by_key.items():
             mut_agg = mut_by_key[key]
 
@@ -133,15 +148,9 @@ class TestOEECalculatorEngine:
             else:
                 # Affected shift-machines must recover to clean baseline under triage decisions
                 # or differ only in the documented way:
-                # - EC-01: Earlier event truncated at next start -> operating time reduced by 900s,
-                #   planned break increased by 900s, shift sum preserved at exactly 28,800s.
-                # - EC-02: Total count is sum of count_delta (excluding negative drop) -> total count recovers.
-                # - EC-03: Invalid inspection excluded from Q -> Q computes conforming yield from valid inspections (not Q=0).
-                # - EC-04: Performance uses master ICT standard -> performance recovers to clean baseline.
-                # - EC-05: Breakdown clipped at break boundary -> availability recovers to clean baseline.
                 assert mut_agg.exception_count > 0
 
-                if key == ("SHIFT-2026-01-01-A", "MCH-LINE-01-01"):
+                if key in ec01_keys:
                     # EC-01: Later event start clipped to prior end -> operating time, PPT, and OEE recover 100% to clean
                     assert mut_agg.operating_time_sec == clean_agg.operating_time_sec
                     assert mut_agg.planned_prod_time_sec == clean_agg.planned_prod_time_sec
@@ -154,11 +163,11 @@ class TestOEECalculatorEngine:
                         == 28800
                     )
                     assert mut_agg.status == AggregateStatus.ANOMALOUS
-                elif key == ("SHIFT-2026-01-01-A", "MCH-LINE-01-02"):
+                elif key in ec02_keys:
                     # EC-02: Documented total_count from sum of valid count_delta (omits single corrupted pulse)
                     assert 0 < clean_agg.total_count - mut_agg.total_count <= 50
                     assert mut_agg.availability == clean_agg.availability
-                elif key == ("SHIFT-2026-01-01-A", "MCH-LINE-01-03"):
+                elif key in ec03_keys:
                     # EC-03: Invalid inspection excluded from Q -> Q computes conforming yield from remaining valid inspections (not Q=0)
                     assert mut_agg.total_count == clean_agg.total_count
                     assert mut_agg.availability == clean_agg.availability
@@ -166,6 +175,7 @@ class TestOEECalculatorEngine:
                     assert 0.90 <= mut_agg.quality <= 1.0
                     assert mut_agg.status == AggregateStatus.ANOMALOUS
                 else:
+                    # EC-04 or EC-05: Recover to clean baseline
                     assert mut_agg.total_count == clean_agg.total_count
                     assert mut_agg.good_count == clean_agg.good_count
                     assert mut_agg.quality == clean_agg.quality

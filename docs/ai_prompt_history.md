@@ -287,5 +287,79 @@ In compliance with YottaFlex AI submission guidelines:
      - Uncompressed CSV footprint: **80.29 MB** (Total directory with metadata: 81.51 MB).
   9. **Defects & Regressions**: 0 defects found. All 75 unit/integration tests passing (100%).
 - **Human Review & Modifications**:
-  - Awaiting human review of full-scale generation and analytics report before Phase 5.
+  - Approved Step 1 numbers, committed and pushed to GitHub main (`eb2b9fb`). Authorized Phase 5b verification only.
+
+---
+
+## Log Entry 10: Phase 5b Verification, OEE Engine Profiling & Per-Anomaly Impact Analysis
+
+- **Timestamp**: 2026-10-27T15:28:00+05:30
+- **Phase**: Phase 5b (Full Verification, Clean Baseline Comparison, OEE Profiling & Impact Analysis)
+- **Prompt Objective**: Execute verification tasks strictly without starting exports, packaging, or README:
+  1. Explain 148 ANOMALOUS aggregates vs 50 injected machine-shifts. Generate clean baseline (`skip_anomalies=True`, seed 20261022) in temp directory, compute OEE on both, and report: (a) bitwise identical aggregates, (b) findings/rules and anomaly types for the 148 aggregates, (c) confirm 0 unlinked differences. Document order-level propagation.
+  2. Add `oee_aggregates.csv` and validation findings JSON to reproducibility hash comparison across separate processes.
+  3. Profile OEE aggregation (82s for 8,100 rows), fix obvious inefficiencies without changing results (assert bitwise identical hash), and report before/after runtime.
+  4. Report clean vs mutated A/P/Q/OEE impact for one example shift per anomaly type, demonstrating documented triage policies on full data.
+  5. Run `git log --oneline` and report commit history.
+  6. Preserve all rules and tolerances, update docs and prompt history, run full test suite, stop and report.
+- **AI Response Summary**:
+  1. **148 ANOMALOUS Aggregates & Order Propagation Explained**:
+     - State events (EC-01, EC-05), counts (EC-02), and inspections (EC-03) are scoped to single machine-shifts ($10 \times 4 = 40$ machine-shifts).
+     - Cycle time standard discrepancies (EC-04) are injected into `production_orders`. Because industrial work orders run across multiple machines and shifts, each corrupted order spanned between 6 and 18 machine-shifts across the line (**120 machine-shifts total**).
+     - Accounting for multi-anomaly overlap on the same shift ($10 + 10 + 10 + 120 + 10 - 12\text{ overlap} = \mathbf{148}$), exactly 148 aggregates were properly linked to findings.
+  2. **Clean Baseline Comparison**:
+     - Metric-identical aggregates: **8,076 / 8,100 (99.70%)**.
+     - Metric-differing aggregates: **24 / 8,100 (0.30%)**, strictly confined to documented triage impacts (10 for EC-01, 10 for EC-02, 4 for EC-03).
+     - Unlinked discrepancies: **0** (Zero unexplained deviations).
+  3. **OEE Engine Profiling & 20x Optimization**:
+     - Identified $O(N_{\text{iterations}} \times N_{\text{rows}})$ bottleneck: 24,300 Polars expression filters scanning 4.74 billion row evaluations inside the 8,100-step loop.
+     - Implemented single-pass pre-grouping into hash maps by `(shift_id, machine_id)`.
+     - Runtime reduced from **82.3 seconds down to 4.09 seconds** (**20.1x speedup / 95% reduction**).
+     - Cryptographic output SHA-256 remained **100% bitwise identical** (`c240fe4a27938298e335a436c9d8f70cc936f2d32b3b30aae8f6215976105eee`).
+  4. **End-to-End Reproducibility**:
+     - Verified bitwise identity across separate processes for all 15 files: 12 CSVs, `manifest.json`, `oee_aggregates.csv`, and canonical `validation_findings.json` (0 mismatches).
+  5. **Concrete Per-Anomaly Impact Demonstrations**:
+     - Documented exact clean vs mutated metric deltas and triage recovery across all 5 edge cases on full 90-day data.
+  6. **Git History & Test Suite**:
+     - `git log --oneline`: 2 commits on `main` (`eb2b9fb`, `4f5bc37`).
+     - Pytest suite: **75/75 passed** in 4.10s (reduced from 6.09s).
+- **Human Review & Modifications**:
+  - Phase 5b approved with three items to fix. Authorized Phase 5c fixes only (no exports, packaging, or README).
+
+---
+
+## Log Entry 11: Phase 5c Fixes (EC-01 Triage, Horizon Stratification, Chronological Event IDs & Full Verification)
+
+- **Timestamp**: 2026-10-27T16:15:00+05:30
+- **Phase**: Phase 5c (Targeted Fixes & Multi-Stage Verification)
+- **Prompt Objective**: Execute 4 specific fixes and verifications:
+  1. EC-01 triage: change triage so later event's start is clipped to previous event's end (`s_dt = max(s_dt, prev_e_dt)`), ensuring earlier event is authoritative. PPT, availability, performance, and OEE recover 100% to clean baseline while shift time accounting stays at 28,800s. Document assumption. Re-run comparison for all 10 EC-01 shifts.
+  2. Anomaly placement: list date, shift, and machine of all 50 anomalies. Replace "first N candidates" with seeded stratified sampling spread across 90 days (Weeks 1-12) on distinct machine-shifts, EC-04 orders chosen across horizon. Report weekly distribution.
+  3. Injected-event ID: fix chronological ID order by sorting state events chronologically per machine and reassigning canonical IDs `EVT-{machine_id}-{seq:06d}` ($1..N$) without gaps. Add unit test asserting per-machine sequence is strictly chronological.
+  4. Regeneration & verification: regenerate `data/full` and `data/starter` (seed 20261022). Re-run all 17 rules, benchmark, OEE, clean comparison, and 15-file two-process reproducibility check. Report findings per rule, benchmark, ANOMALOUS count explanation, and per-type before/after numbers. One small git commit per numbered item, do not squash. Stop and report.
+- **AI Response Summary**:
+  1. **Commit 1 (`f4fd7c3`) - EC-01 Authoritative Precedence Triage**:
+     - Modified [aggregator.py](file:///c:/Users/Admin/Desktop/yota/src/yotta_oee/calculator/aggregator.py): Preceding operational event is authoritative; subsequent overlapping event start is clipped forward (`s_dt = max(s_dt, prev_event_end)`).
+     - Documented design assumption in [docs/architecture_decisions.md](file:///c:/Users/Admin/Desktop/yota/docs/architecture_decisions.md#L400-L408).
+     - Clean baseline audit: All 10 EC-01 shifts recover 100% identically to clean baseline (Delta OEE = 0.00e+00, PPT = 25,200s, Operating Time = 23,755s, Shift Duration Sum = 28,800s).
+  2. **Commit 2 (`277ada9`) - Seeded Stratified Horizon Sampling**:
+     - Partitioned 90-day timeline into 10 temporal strata (~9 days each).
+     - Injected anomalies spread across Weeks 1 to 12 across 40 strictly distinct machine-shifts.
+     - EC-04 orders selected across the full horizon and evenly distributed across all 5 production lines (LINE-01 to LINE-05).
+  3. **Commit 3 (`ff23bdd`) - Chronological Event ID Sequencing & Test**:
+     - Implemented `_realign_event_ids_chronologically`: sorts per machine by `(start_time, 0 if PLANNED_DOWNTIME else 1, end_time)` and renumbers sequential canonical IDs ($1..N$) without gaps.
+     - Day 1 injected breakdown receives sequential sequence (e.g. `000032`), eliminating artificial 3980 leakage.
+     - Added `test_per_machine_event_id_sequence_is_strictly_chronological` in `tests/test_generator.py` asserting strict monotonicity and non-decreasing timestamps.
+  4. **Commit 4 - Full Regeneration & Verification**:
+     - Regenerated `data/starter` and `data/full` (seed `20261022`).
+     - Validation: 100 findings across 50 injected anomalies (0 false positives).
+     - Benchmark: 100.00% precision, 100.00% recall, 100.00% F1-score across all 5 edge cases.
+     - OEE calculation: 8,100 aggregates computed in 4.09s, analytical identity delta max $3.33 \times 10^{-16}$.
+     - ANOMALOUS count: exactly 189 aggregates (40 direct machine-shifts + 150 order-spanned machine-shifts - 1 overlap = 189). 0 unlinked differences.
+     - 15-file two-process reproducibility check: 100% bitwise identical across all 15 files.
+     - Pytest suite: **76/76 passed** in 4.03s.
+- **Human Review & Modifications**:
+  - Awaiting human review of Phase 5c report.
+
+
 
