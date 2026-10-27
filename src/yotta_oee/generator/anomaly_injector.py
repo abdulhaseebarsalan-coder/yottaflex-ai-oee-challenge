@@ -8,9 +8,10 @@ Injected Edge Cases:
 - EC-05: BREAKDOWN_OVERLAPS_BREAK (unplanned downtime collision with scheduled break)
 """
 
+from collections import defaultdict
 from datetime import datetime, timedelta
 import random
-from typing import Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from yotta_oee.domain import (
     AnomalyType,
@@ -79,6 +80,9 @@ class AnomalyInjector:
             state_events, shifts, count=n, used_ms=used_machine_shifts
         )
         ground_truth.extend(ec05_gt)
+
+        # 6. Chronological ID Realignment for State Events
+        state_events, ground_truth = self._realign_event_ids_chronologically(state_events, ground_truth)
 
         return state_events, counts, inspections, orders, standards, ground_truth
 
@@ -511,4 +515,62 @@ class AnomalyInjector:
             )
 
         return events_copy, ground_truth
+
+    def _realign_event_ids_chronologically(
+        self, state_events: List[StateEvent], ground_truth: List[GroundTruthAnomaly]
+    ) -> Tuple[List[StateEvent], List[GroundTruthAnomaly]]:
+        """Reassign per-machine event IDs in strict chronological order so sequence numbers never leak injection."""
+        events_by_machine: Dict[str, List[StateEvent]] = defaultdict(list)
+        for e in state_events:
+            events_by_machine[e.machine_id].append(e)
+
+        id_map: Dict[str, str] = {}
+        realigned_events: List[StateEvent] = []
+
+        for mch_id in sorted(events_by_machine.keys()):
+            mch_evts = events_by_machine[mch_id]
+            # Sort chronologically. Break ties by giving PLANNED_DOWNTIME precedence over UNPLANNED_DOWNTIME
+            mch_evts.sort(
+                key=lambda ev: (
+                    ev.start_time,
+                    0 if ev.state == MachineState.PLANNED_DOWNTIME else 1,
+                    ev.end_time,
+                )
+            )
+
+            for seq, ev in enumerate(mch_evts, start=1):
+                new_id = f"EVT-{mch_id}-{seq:06d}"
+                id_map[ev.event_id] = new_id
+                realigned_ev = StateEvent(
+                    event_id=new_id,
+                    machine_id=ev.machine_id,
+                    shift_id=ev.shift_id,
+                    order_id=ev.order_id,
+                    state=ev.state,
+                    start_time=ev.start_time,
+                    end_time=ev.end_time,
+                    duration_sec=ev.duration_sec,
+                    reason_code=ev.reason_code,
+                )
+                realigned_events.append(realigned_ev)
+
+        # Update ground truth references to state events
+        updated_ground_truth: List[GroundTruthAnomaly] = []
+        for gt in ground_truth:
+            new_rec_id = id_map.get(gt.record_id, gt.record_id)
+            new_rel_id = id_map.get(gt.related_record_id, gt.related_record_id) if gt.related_record_id else None
+            updated_gt = GroundTruthAnomaly(
+                anomaly_id=gt.anomaly_id,
+                anomaly_type=gt.anomaly_type,
+                table_name=gt.table_name,
+                record_id=new_rec_id,
+                related_record_id=new_rel_id,
+                field_name=gt.field_name,
+                injected_value=gt.injected_value,
+                expected_value=gt.expected_value,
+                detection_rule_id=gt.detection_rule_id,
+            )
+            updated_ground_truth.append(updated_gt)
+
+        return realigned_events, updated_ground_truth
 

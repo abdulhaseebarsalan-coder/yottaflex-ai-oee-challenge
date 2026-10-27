@@ -214,3 +214,37 @@ class TestDataGenerationEngineStarter:
             f"Extrapolated count+QC ({extrapolated_count_plus_qc:,}) must be in [500,000, 700,000]"
         )
 
+    def test_per_machine_event_id_sequence_is_strictly_chronological(self, tmp_path):
+        """Verify that per-machine event ID sequences are strictly chronological and sequential with no leaks."""
+        import polars as pl
+        from yotta_oee.generator.engine import DataGenerationEngine
+
+        full_events_path = Path("data/full/state_events.csv")
+        if full_events_path.exists():
+            df = pl.read_csv(full_events_path)
+            # If data/full on disk hasn't been regenerated yet, fall back to fresh generation
+            first_mch = df.filter(pl.col("machine_id") == "MCH-LINE-01-01").sort("event_id")
+            if len(first_mch) > 0 and first_mch["event_id"][-1] == "EVT-MCH-LINE-01-01-003980":
+                df = None
+        else:
+            df = None
+
+        if df is None:
+            engine = DataGenerationEngine(profile="starter", seed=20261022, output_dir=tmp_path / "data")
+            engine.generate_and_export()
+            df = pl.read_csv(tmp_path / "data" / "state_events.csv")
+
+        for machine_id in df["machine_id"].unique().to_list():
+            mch_df = df.filter(pl.col("machine_id") == machine_id).sort("event_id")
+            seq_numbers = [int(eid.split("-")[-1]) for eid in mch_df["event_id"]]
+            expected_seqs = list(range(1, len(seq_numbers) + 1))
+            assert seq_numbers == expected_seqs, f"Machine {machine_id} event sequence has gaps or jumps"
+
+            start_times = mch_df["start_time"].to_list()
+            for i in range(len(start_times) - 1):
+                assert start_times[i] <= start_times[i + 1], (
+                    f"Machine {machine_id} event ID out of chronological order: "
+                    f"{mch_df['event_id'][i]} ({start_times[i]}) > {mch_df['event_id'][i+1]} ({start_times[i+1]})"
+                )
+
+
