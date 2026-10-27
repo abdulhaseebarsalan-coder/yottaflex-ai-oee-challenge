@@ -1,0 +1,23 @@
+{
+  "profile": "starter",
+  "seed": 20261022,
+  "total_findings": 10,
+  "findings_by_rule": {
+    "VAL-COUNT-001": 1,
+    "VAL-PERF-001": 1,
+    "VAL-QUAL-001": 2,
+    "VAL-STATE-001": 1,
+    "VAL-TIME-002": 2,
+    "VAL-TIME-003": 1,
+    "VAL-TIME-005": 2
+  },
+  "findings_by_severity": {
+    "ERROR": 10
+  },
+  "findings_by_table": {
+    "production_counts.csv": 1,
+    "production_orders.csv": 1,
+    "quality_inspections.csv": 2,
+    "state_events.csv": 6
+  }
+}

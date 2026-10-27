@@ -1,0 +1,105 @@
+{
+  "profile": "starter",
+  "seed": 20261022,
+  "status": "PASS",
+  "total_files_compared": 16,
+  "all_matched": true,
+  "comparisons": [
+    {
+      "file_name": "downtime_reasons.csv",
+      "process_1_sha256": "722b423391eba3162a5fe7b2bcc73b70525b5e18250827d1a4b3d4ec2a783e8b",
+      "process_2_sha256": "722b423391eba3162a5fe7b2bcc73b70525b5e18250827d1a4b3d4ec2a783e8b",
+      "match": true
+    },
+    {
+      "file_name": "ground_truth/ground_truth.csv",
+      "process_1_sha256": "7fe2d018e20ee642efd9ab1ec743bd70f0c0121fe8b068f471a8e053e7eb5b80",
+      "process_2_sha256": "7fe2d018e20ee642efd9ab1ec743bd70f0c0121fe8b068f471a8e053e7eb5b80",
+      "match": true
+    },
+    {
+      "file_name": "ground_truth/ground_truth.json",
+      "process_1_sha256": "12fc019f2ab84b64ebf9d9d1d5363fe5eb8b39e657968a888a9dcc7fbe52d15c",
+      "process_2_sha256": "12fc019f2ab84b64ebf9d9d1d5363fe5eb8b39e657968a888a9dcc7fbe52d15c",
+      "match": true
+    },
+    {
+      "file_name": "lines.csv",
+      "process_1_sha256": "30e6b417b148ec5dac1f06e2f81e682419601838308e032025027e404f513eba",
+      "process_2_sha256": "30e6b417b148ec5dac1f06e2f81e682419601838308e032025027e404f513eba",
+      "match": true
+    },
+    {
+      "file_name": "machine_product_standards.csv",
+      "process_1_sha256": "2ad0c5459b0a7e2e3455775468391421379c357e0a66ecbf98f4949cbad5ea03",
+      "process_2_sha256": "2ad0c5459b0a7e2e3455775468391421379c357e0a66ecbf98f4949cbad5ea03",
+      "match": true
+    },
+    {
+      "file_name": "machines.csv",
+      "process_1_sha256": "7db3b9f3d51bf94c1affabeac52afdac4998bd02edd39e9c8cc9d29f56b4fdab",
+      "process_2_sha256": "7db3b9f3d51bf94c1affabeac52afdac4998bd02edd39e9c8cc9d29f56b4fdab",
+      "match": true
+    },
+    {
+      "file_name": "manifest.json",
+      "process_1_sha256": "899cd6ad5f5b8bbd5de10bd5d2d61a439380bc9a8c80a6783e17bc4b2e070e5a",
+      "process_2_sha256": "899cd6ad5f5b8bbd5de10bd5d2d61a439380bc9a8c80a6783e17bc4b2e070e5a",
+      "match": true
+    },
+    {
+      "file_name": "oee_aggregates.csv",
+      "process_1_sha256": "36476f935caeec5ba6b8c46446c2451560ddf98f01bc1938e9cc87b4354d364e",
+      "process_2_sha256": "36476f935caeec5ba6b8c46446c2451560ddf98f01bc1938e9cc87b4354d364e",
+      "match": true
+    },
+    {
+      "file_name": "plants.csv",
+      "process_1_sha256": "dab0c7f18ed13193de95a31bb1f4b3813cbced0d3804ecc5c4f256b51fdbcc21",
+      "process_2_sha256": "dab0c7f18ed13193de95a31bb1f4b3813cbced0d3804ecc5c4f256b51fdbcc21",
+      "match": true
+    },
+    {
+      "file_name": "production_counts.csv",
+      "process_1_sha256": "92ca5d3a546f2e1573cd4e0b2feb5d10a21f35e338dcd3333fbc6f5ab1c0cd7f",
+      "process_2_sha256": "92ca5d3a546f2e1573cd4e0b2feb5d10a21f35e338dcd3333fbc6f5ab1c0cd7f",
+      "match": true
+    },
+    {
+      "file_name": "production_orders.csv",
+      "process_1_sha256": "82b8898ddca2ad6573b3a8956153bfcf0c9701eb76550ce17901628609f35158",
+      "process_2_sha256": "82b8898ddca2ad6573b3a8956153bfcf0c9701eb76550ce17901628609f35158",
+      "match": true
+    },
+    {
+      "file_name": "products.csv",
+      "process_1_sha256": "ad713f29ee824ccce2e7cf0a4536690cc2f80758fb755e8c3512eef8d4221dba",
+      "process_2_sha256": "ad713f29ee824ccce2e7cf0a4536690cc2f80758fb755e8c3512eef8d4221dba",
+      "match": true
+    },
+    {
+      "file_name": "quality_inspections.csv",
+      "process_1_sha256": "972957ac23b30b0a07ee8bfbd5cb7d88c23918702ac762fb8d5146791b722028",
+      "process_2_sha256": "972957ac23b30b0a07ee8bfbd5cb7d88c23918702ac762fb8d5146791b722028",
+      "match": true
+    },
+    {
+      "file_name": "shifts.csv",
+      "process_1_sha256": "95187f65a96a52401a2afe8c74fbe7043101a0e51102e2b313e2bb78fe116d9b",
+      "process_2_sha256": "95187f65a96a52401a2afe8c74fbe7043101a0e51102e2b313e2bb78fe116d9b",
+      "match": true
+    },
+    {
+      "file_name": "state_events.csv",
+      "process_1_sha256": "d996ccf2a6abacc20f3fe0e609be7d24c119f2cf388a2b5177acc96b9205f63b",
+      "process_2_sha256": "d996ccf2a6abacc20f3fe0e609be7d24c119f2cf388a2b5177acc96b9205f63b",
+      "match": true
+    },
+    {
+      "file_name": "validation_findings.json",
+      "process_1_sha256": "b64f69ac1a801a87966f56a320c6af17b7be0abac2b02fb100c31f25cbc13248",
+      "process_2_sha256": "b64f69ac1a801a87966f56a320c6af17b7be0abac2b02fb100c31f25cbc13248",
+      "match": true
+    }
+  ]
+}

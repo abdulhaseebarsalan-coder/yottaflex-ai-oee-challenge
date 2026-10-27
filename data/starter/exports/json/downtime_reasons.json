@@ -1,0 +1,56 @@
+[
+  {
+    "reason_code": "DT-CHANGEOVER-SETUP",
+    "category": "CHANGEOVER",
+    "description": "Product Die / Fixture Swap and Tooling Calibration",
+    "affects_availability": true
+  },
+  {
+    "reason_code": "DT-PLANNED-BREAK",
+    "category": "PLANNED",
+    "description": "Scheduled Shift Rest / Meal Break",
+    "affects_availability": false
+  },
+  {
+    "reason_code": "DT-PLANNED-MAINT",
+    "category": "PLANNED",
+    "description": "Scheduled Autonomous / Preventative Maintenance",
+    "affects_availability": false
+  },
+  {
+    "reason_code": "DT-STOP-BLOCKED",
+    "category": "LINE_STOP",
+    "description": "Downstream Line Blockage / Output Buffer Saturation",
+    "affects_availability": true
+  },
+  {
+    "reason_code": "DT-STOP-STARVED",
+    "category": "LINE_STOP",
+    "description": "Material Starvation from Upstream Feeder Buffer",
+    "affects_availability": true
+  },
+  {
+    "reason_code": "DT-UNPLANNED-ELEC",
+    "category": "UNPLANNED",
+    "description": "Electrical Component / Sensor Signal Failure",
+    "affects_availability": true
+  },
+  {
+    "reason_code": "DT-UNPLANNED-JAM",
+    "category": "UNPLANNED",
+    "description": "Mechanical Jam / Material Feed Obstruction",
+    "affects_availability": true
+  },
+  {
+    "reason_code": "DT-UNPLANNED-OP",
+    "category": "UNPLANNED",
+    "description": "Unscheduled Operator Absence or Safety Interlock Trip",
+    "affects_availability": true
+  },
+  {
+    "reason_code": "DT-UNPLANNED-TOOL",
+    "category": "UNPLANNED",
+    "description": "Spindle / Cutting Tool Fracture or Excessive Wear",
+    "affects_availability": true
+  }
+]

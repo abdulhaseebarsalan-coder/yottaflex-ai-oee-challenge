@@ -183,3 +183,81 @@ class TestOEECalculatorEngine:
                     assert mut_agg.availability == clean_agg.availability
                     assert mut_agg.oee == clean_agg.oee
 
+    def test_ec03_quality_fallback_one_or_zero_valid_inspections(self, starter_dataset_path: Path, tmp_path: Path):
+        """CRITICAL GOVERNANCE TEST (Item 7): Test EC-03 fallback when exactly one or zero valid inspections remain.
+        
+        Strictly consumes delivered data only:
+        - When 1 valid inspection remains: Quality yield is computed strictly from that single valid sample lot (good / inspected).
+        - When 0 valid inspections remain: Quality yield defaults to nominal 1.0 (assuming no defect evidence in telemetry),
+          avoiding unphysical Q=0 or external data fabrication, and flags the aggregate as ANOMALOUS with exception_count >= 1.
+        """
+        import shutil
+        import polars as pl
+        from yotta_oee.validator.base import RuleFinding, Severity
+        from yotta_oee.domain import ValidationRuleId, AggregateStatus
+
+        test_dir = tmp_path / "test_ec03_fallback"
+        shutil.copytree(starter_dataset_path, test_dir)
+
+        # Pick a specific machine shift
+        target_shift = "SHIFT-2026-01-01-A"
+        target_machine = "MCH-LINE-01-01"
+
+        qc_path = test_dir / "quality_inspections.csv"
+        qc_df = pl.read_csv(qc_path)
+
+        # Case A: Exactly ONE valid inspection remains
+        # Keep only 2 inspections for target shift-machine: one valid (50 inspected, 45 passed, 5 scrap -> 90% yield) and one corrupted
+        other_qc = qc_df.filter(~((pl.col("shift_id") == target_shift) & (pl.col("machine_id") == target_machine)))
+        custom_qc = pl.DataFrame({
+            "inspection_id": ["QC-TEST-001", "QC-TEST-002"],
+            "order_id": ["PO-2026-000001", "PO-2026-000001"],
+            "machine_id": [target_machine, target_machine],
+            "shift_id": [target_shift, target_shift],
+            "timestamp": ["2026-01-01T08:00:00Z", "2026-01-01T12:00:00Z"],
+            "inspection_type": ["IN_PROCESS", "IN_PROCESS"],
+            "inspected_qty": [50, 50],
+            "passed_qty": [45, 10],
+            "scrap_qty": [5, 60],  # QC-TEST-002 is corrupted: scrap 60 > inspected 50
+            "rework_qty": [0, 0],
+            "defect_code": ["BURR_CONTAMINATION", "BURR_CONTAMINATION"],
+        })
+        pl.concat([other_qc, custom_qc]).write_csv(qc_path)
+
+        finding = RuleFinding(
+            rule_id=ValidationRuleId.VAL_QUAL_001,
+            severity=Severity.ERROR,
+            table_name="quality_inspections.csv",
+            record_id="QC-TEST-002",
+            message="Scrap exceeds inspected",
+        )
+
+        calc = OEECalculatorEngine(test_dir)
+        aggs, _ = calc.calculate_all(findings=[finding])
+        agg_one = [a for a in aggs if a.shift_id == target_shift and a.machine_id == target_machine][0]
+
+        # Single valid sample lot has 45 passed / 50 inspected = 0.90 yield
+        assert agg_one.quality == pytest.approx(0.90, abs=1e-3)
+        assert agg_one.status == AggregateStatus.ANOMALOUS
+        assert agg_one.exception_count == 1
+
+        # Case B: Exactly ZERO valid inspections remain
+        # Invalidate both inspections
+        finding2 = RuleFinding(
+            rule_id=ValidationRuleId.VAL_QUAL_001,
+            severity=Severity.ERROR,
+            table_name="quality_inspections.csv",
+            record_id="QC-TEST-001",
+            message="Inspection invalidated",
+        )
+        calc2 = OEECalculatorEngine(test_dir)
+        aggs2, _ = calc2.calculate_all(findings=[finding, finding2])
+        agg_zero = [a for a in aggs2 if a.shift_id == target_shift and a.machine_id == target_machine][0]
+
+        # Zero valid inspections -> nominal 1.0 yield, uses zero external data, marked ANOMALOUS
+        assert agg_zero.quality == 1.0
+        assert agg_zero.good_count == agg_zero.total_count
+        assert agg_zero.scrap_count == 0
+        assert agg_zero.status == AggregateStatus.ANOMALOUS
+        assert agg_zero.exception_count == 2
+

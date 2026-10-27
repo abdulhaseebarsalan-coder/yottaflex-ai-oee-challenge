@@ -7,7 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 import random
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import polars as pl
 

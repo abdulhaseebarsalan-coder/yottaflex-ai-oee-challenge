@@ -20,9 +20,14 @@ ENV/
 .coverage
 htmlcov/
 
-# Generated Data directories
-data/
+# Full dataset generated on demand (starter is committed)
 data/full/
+
+# Non-deterministic metadata containing runtime timestamps
+**/run_metadata.json
+run_metadata.json
+
+# Generated reports
 reports/
 
 # IDE files

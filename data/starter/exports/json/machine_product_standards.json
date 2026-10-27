@@ -1,0 +1,146 @@
+[
+  {
+    "standard_id": "STD-MCH-LINE-01-01-PRD-0001",
+    "machine_id": "MCH-LINE-01-01",
+    "product_id": "PRD-0001",
+    "ideal_cycle_time_sec": 23.3
+  },
+  {
+    "standard_id": "STD-MCH-LINE-01-01-PRD-0002",
+    "machine_id": "MCH-LINE-01-01",
+    "product_id": "PRD-0002",
+    "ideal_cycle_time_sec": 11.3
+  },
+  {
+    "standard_id": "STD-MCH-LINE-01-01-PRD-0003",
+    "machine_id": "MCH-LINE-01-01",
+    "product_id": "PRD-0003",
+    "ideal_cycle_time_sec": 14.0
+  },
+  {
+    "standard_id": "STD-MCH-LINE-01-01-PRD-0004",
+    "machine_id": "MCH-LINE-01-01",
+    "product_id": "PRD-0004",
+    "ideal_cycle_time_sec": 10.8
+  },
+  {
+    "standard_id": "STD-MCH-LINE-01-02-PRD-0001",
+    "machine_id": "MCH-LINE-01-02",
+    "product_id": "PRD-0001",
+    "ideal_cycle_time_sec": 17.1
+  },
+  {
+    "standard_id": "STD-MCH-LINE-01-02-PRD-0002",
+    "machine_id": "MCH-LINE-01-02",
+    "product_id": "PRD-0002",
+    "ideal_cycle_time_sec": 21.3
+  },
+  {
+    "standard_id": "STD-MCH-LINE-01-02-PRD-0003",
+    "machine_id": "MCH-LINE-01-02",
+    "product_id": "PRD-0003",
+    "ideal_cycle_time_sec": 12.0
+  },
+  {
+    "standard_id": "STD-MCH-LINE-01-02-PRD-0004",
+    "machine_id": "MCH-LINE-01-02",
+    "product_id": "PRD-0004",
+    "ideal_cycle_time_sec": 11.7
+  },
+  {
+    "standard_id": "STD-MCH-LINE-01-03-PRD-0001",
+    "machine_id": "MCH-LINE-01-03",
+    "product_id": "PRD-0001",
+    "ideal_cycle_time_sec": 14.2
+  },
+  {
+    "standard_id": "STD-MCH-LINE-01-03-PRD-0002",
+    "machine_id": "MCH-LINE-01-03",
+    "product_id": "PRD-0002",
+    "ideal_cycle_time_sec": 23.1
+  },
+  {
+    "standard_id": "STD-MCH-LINE-01-03-PRD-0003",
+    "machine_id": "MCH-LINE-01-03",
+    "product_id": "PRD-0003",
+    "ideal_cycle_time_sec": 12.6
+  },
+  {
+    "standard_id": "STD-MCH-LINE-01-03-PRD-0004",
+    "machine_id": "MCH-LINE-01-03",
+    "product_id": "PRD-0004",
+    "ideal_cycle_time_sec": 22.2
+  },
+  {
+    "standard_id": "STD-MCH-LINE-02-01-PRD-0001",
+    "machine_id": "MCH-LINE-02-01",
+    "product_id": "PRD-0001",
+    "ideal_cycle_time_sec": 17.7
+  },
+  {
+    "standard_id": "STD-MCH-LINE-02-01-PRD-0002",
+    "machine_id": "MCH-LINE-02-01",
+    "product_id": "PRD-0002",
+    "ideal_cycle_time_sec": 13.5
+  },
+  {
+    "standard_id": "STD-MCH-LINE-02-01-PRD-0003",
+    "machine_id": "MCH-LINE-02-01",
+    "product_id": "PRD-0003",
+    "ideal_cycle_time_sec": 17.7
+  },
+  {
+    "standard_id": "STD-MCH-LINE-02-01-PRD-0004",
+    "machine_id": "MCH-LINE-02-01",
+    "product_id": "PRD-0004",
+    "ideal_cycle_time_sec": 19.9
+  },
+  {
+    "standard_id": "STD-MCH-LINE-02-02-PRD-0001",
+    "machine_id": "MCH-LINE-02-02",
+    "product_id": "PRD-0001",
+    "ideal_cycle_time_sec": 14.4
+  },
+  {
+    "standard_id": "STD-MCH-LINE-02-02-PRD-0002",
+    "machine_id": "MCH-LINE-02-02",
+    "product_id": "PRD-0002",
+    "ideal_cycle_time_sec": 20.8
+  },
+  {
+    "standard_id": "STD-MCH-LINE-02-02-PRD-0003",
+    "machine_id": "MCH-LINE-02-02",
+    "product_id": "PRD-0003",
+    "ideal_cycle_time_sec": 10.6
+  },
+  {
+    "standard_id": "STD-MCH-LINE-02-02-PRD-0004",
+    "machine_id": "MCH-LINE-02-02",
+    "product_id": "PRD-0004",
+    "ideal_cycle_time_sec": 7.3
+  },
+  {
+    "standard_id": "STD-MCH-LINE-02-03-PRD-0001",
+    "machine_id": "MCH-LINE-02-03",
+    "product_id": "PRD-0001",
+    "ideal_cycle_time_sec": 19.1
+  },
+  {
+    "standard_id": "STD-MCH-LINE-02-03-PRD-0002",
+    "machine_id": "MCH-LINE-02-03",
+    "product_id": "PRD-0002",
+    "ideal_cycle_time_sec": 20.2
+  },
+  {
+    "standard_id": "STD-MCH-LINE-02-03-PRD-0003",
+    "machine_id": "MCH-LINE-02-03",
+    "product_id": "PRD-0003",
+    "ideal_cycle_time_sec": 21.1
+  },
+  {
+    "standard_id": "STD-MCH-LINE-02-03-PRD-0004",
+    "machine_id": "MCH-LINE-02-03",
+    "product_id": "PRD-0004",
+    "ideal_cycle_time_sec": 20.6
+  }
+]

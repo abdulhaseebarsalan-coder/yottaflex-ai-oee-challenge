@@ -1,0 +1,26 @@
+[
+  {
+    "product_id": "PRD-0001",
+    "sku": "SKU-AER-0001",
+    "name": "Aerospace Precision Component 01",
+    "family": "AEROSPACE"
+  },
+  {
+    "product_id": "PRD-0002",
+    "sku": "SKU-AUT-0002",
+    "name": "Automotive Precision Component 02",
+    "family": "AUTOMOTIVE"
+  },
+  {
+    "product_id": "PRD-0003",
+    "sku": "SKU-MED-0003",
+    "name": "Medical Precision Component 03",
+    "family": "MEDICAL"
+  },
+  {
+    "product_id": "PRD-0004",
+    "sku": "SKU-ENE-0004",
+    "name": "Energy Precision Component 04",
+    "family": "ENERGY"
+  }
+]

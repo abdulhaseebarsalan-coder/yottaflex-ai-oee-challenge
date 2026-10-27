@@ -13,9 +13,9 @@
       "usage": "Inspiration for OEE element decomposition, Planned Production Time (PPT), Operating Time, and Quality conforming unit accounting."
     },
     {
-      "standard": "SEMI E10-0304",
+      "standard": "SEMI E10-0304 (Design Reference)",
       "title": "Standard for Definition and Measurement of Equipment Reliability, Availability, and Maintainability (RAM)",
-      "usage": "Taxonomy of operational machine states (Running, Unplanned Downtime, Planned Downtime, Starved, Blocked, Off) and state mutual exclusivity."
+      "usage": "Design reference for taxonomy of operational machine states (Running, Unplanned Downtime, Planned Downtime, Starved, Blocked, Off) and state mutual exclusivity (non-binding design inspiration)."
     },
     {
       "standard": "Nakajima TPM Framework (1988)",
@@ -25,8 +25,9 @@
     }
   ],
   "licensing": {
-    "software_license": "MIT License",
-    "dataset_license": "Creative Commons Zero v1.0 Universal (CC0 1.0) Public Domain Dedication",
+    "software_license": "Chosen by the repository owner",
+    "dataset_license": "Chosen by the repository owner",
+    "owner_instructions": "To license this repository, add a LICENSE file in the root directory (e.g. MIT, Apache-2.0, BSD-3-Clause, or Proprietary Commercial License) according to organizational requirements.",
     "third_party_dependencies": [
       {
         "library": "polars",

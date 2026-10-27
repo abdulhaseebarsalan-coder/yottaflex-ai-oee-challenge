@@ -1,0 +1,26 @@
+{
+  "profile": "full",
+  "total_aggregates": 8100,
+  "anomalous_aggregates_count": 189,
+  "clean_aggregates_count": 7911,
+  "equivalence_verification": {
+    "total_verified": 8100,
+    "passed_count": 8100,
+    "failed_count": 0,
+    "max_delta": 3.3306690738754696e-16
+  },
+  "quality_sampling": {
+    "total_inspections": 16200,
+    "total_inspected_units": 486640,
+    "total_production_units": 12611185,
+    "sampling_coverage_pct": 3.86,
+    "sample_size_stats": {
+      "total_samples": 8100,
+      "min_sample_units": 30,
+      "max_sample_units": 70,
+      "mean_sample_units": 60.1
+    },
+    "rework_accounting": "Salvaged within shift and conforming (Good = Passed + Rework)",
+    "sample_based_q_limits": "Lot-based inspection estimates population quality. Good count is integer-quantized from sample yield (Good = round(Total * Yield)) so integer ratio Good/Total preserves mass-energy equivalence A * P * Q == (Good * ICT) / PPT to 1e-6."
+  }
+}

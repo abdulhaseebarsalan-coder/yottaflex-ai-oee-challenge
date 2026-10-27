@@ -1,0 +1,74 @@
+[
+  {
+    "shift_id": "SHIFT-2026-01-01-A",
+    "plant_id": "PLANT-01",
+    "shift_code": "SHIFT_A",
+    "start_time": "2026-01-01T06:00:00Z",
+    "end_time": "2026-01-01T14:00:00Z",
+    "planned_break_sec": 3600
+  },
+  {
+    "shift_id": "SHIFT-2026-01-01-B",
+    "plant_id": "PLANT-01",
+    "shift_code": "SHIFT_B",
+    "start_time": "2026-01-01T14:00:00Z",
+    "end_time": "2026-01-01T22:00:00Z",
+    "planned_break_sec": 3600
+  },
+  {
+    "shift_id": "SHIFT-2026-01-01-C",
+    "plant_id": "PLANT-01",
+    "shift_code": "SHIFT_C",
+    "start_time": "2026-01-01T22:00:00Z",
+    "end_time": "2026-01-02T06:00:00Z",
+    "planned_break_sec": 3600
+  },
+  {
+    "shift_id": "SHIFT-2026-01-02-A",
+    "plant_id": "PLANT-01",
+    "shift_code": "SHIFT_A",
+    "start_time": "2026-01-02T06:00:00Z",
+    "end_time": "2026-01-02T14:00:00Z",
+    "planned_break_sec": 3600
+  },
+  {
+    "shift_id": "SHIFT-2026-01-02-B",
+    "plant_id": "PLANT-01",
+    "shift_code": "SHIFT_B",
+    "start_time": "2026-01-02T14:00:00Z",
+    "end_time": "2026-01-02T22:00:00Z",
+    "planned_break_sec": 3600
+  },
+  {
+    "shift_id": "SHIFT-2026-01-02-C",
+    "plant_id": "PLANT-01",
+    "shift_code": "SHIFT_C",
+    "start_time": "2026-01-02T22:00:00Z",
+    "end_time": "2026-01-03T06:00:00Z",
+    "planned_break_sec": 3600
+  },
+  {
+    "shift_id": "SHIFT-2026-01-03-A",
+    "plant_id": "PLANT-01",
+    "shift_code": "SHIFT_A",
+    "start_time": "2026-01-03T06:00:00Z",
+    "end_time": "2026-01-03T14:00:00Z",
+    "planned_break_sec": 3600
+  },
+  {
+    "shift_id": "SHIFT-2026-01-03-B",
+    "plant_id": "PLANT-01",
+    "shift_code": "SHIFT_B",
+    "start_time": "2026-01-03T14:00:00Z",
+    "end_time": "2026-01-03T22:00:00Z",
+    "planned_break_sec": 3600
+  },
+  {
+    "shift_id": "SHIFT-2026-01-03-C",
+    "plant_id": "PLANT-01",
+    "shift_code": "SHIFT_C",
+    "start_time": "2026-01-03T22:00:00Z",
+    "end_time": "2026-01-04T06:00:00Z",
+    "planned_break_sec": 3600
+  }
+]

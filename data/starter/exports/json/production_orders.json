@@ -1,0 +1,102 @@
+[
+  {
+    "order_id": "PO-2026-000001",
+    "product_id": "PRD-0003",
+    "line_id": "LINE-01",
+    "target_quantity": 4467,
+    "scheduled_start": "2026-01-01T06:00:00Z",
+    "scheduled_end": "2026-01-02T06:00:00Z",
+    "status": "COMPLETED",
+    "planned_cycle_time_sec": 14.0
+  },
+  {
+    "order_id": "PO-2026-000006",
+    "product_id": "PRD-0002",
+    "line_id": "LINE-02",
+    "target_quantity": 1403,
+    "scheduled_start": "2026-01-01T06:00:00Z",
+    "scheduled_end": "2026-01-01T14:00:00Z",
+    "status": "COMPLETED",
+    "planned_cycle_time_sec": 13.5
+  },
+  {
+    "order_id": "PO-2026-000007",
+    "product_id": "PRD-0003",
+    "line_id": "LINE-02",
+    "target_quantity": 1515,
+    "scheduled_start": "2026-01-01T14:00:00Z",
+    "scheduled_end": "2026-01-01T22:00:00Z",
+    "status": "COMPLETED",
+    "planned_cycle_time_sec": 0.35
+  },
+  {
+    "order_id": "PO-2026-000008",
+    "product_id": "PRD-0004",
+    "line_id": "LINE-02",
+    "target_quantity": 5754,
+    "scheduled_start": "2026-01-01T22:00:00Z",
+    "scheduled_end": "2026-01-02T22:00:00Z",
+    "status": "COMPLETED",
+    "planned_cycle_time_sec": 19.9
+  },
+  {
+    "order_id": "PO-2026-000002",
+    "product_id": "PRD-0004",
+    "line_id": "LINE-01",
+    "target_quantity": 1249,
+    "scheduled_start": "2026-01-02T06:00:00Z",
+    "scheduled_end": "2026-01-02T14:00:00Z",
+    "status": "COMPLETED",
+    "planned_cycle_time_sec": 10.8
+  },
+  {
+    "order_id": "PO-2026-000003",
+    "product_id": "PRD-0001",
+    "line_id": "LINE-01",
+    "target_quantity": 1435,
+    "scheduled_start": "2026-01-02T14:00:00Z",
+    "scheduled_end": "2026-01-02T22:00:00Z",
+    "status": "COMPLETED",
+    "planned_cycle_time_sec": 23.3
+  },
+  {
+    "order_id": "PO-2026-000004",
+    "product_id": "PRD-0002",
+    "line_id": "LINE-01",
+    "target_quantity": 1202,
+    "scheduled_start": "2026-01-02T22:00:00Z",
+    "scheduled_end": "2026-01-03T06:00:00Z",
+    "status": "COMPLETED",
+    "planned_cycle_time_sec": 11.3
+  },
+  {
+    "order_id": "PO-2026-000009",
+    "product_id": "PRD-0001",
+    "line_id": "LINE-02",
+    "target_quantity": 5511,
+    "scheduled_start": "2026-01-02T22:00:00Z",
+    "scheduled_end": "2026-01-03T22:00:00Z",
+    "status": "COMPLETED",
+    "planned_cycle_time_sec": 17.7
+  },
+  {
+    "order_id": "PO-2026-000005",
+    "product_id": "PRD-0003",
+    "line_id": "LINE-01",
+    "target_quantity": 6135,
+    "scheduled_start": "2026-01-03T06:00:00Z",
+    "scheduled_end": "2026-01-04T06:00:00Z",
+    "status": "COMPLETED",
+    "planned_cycle_time_sec": 14.0
+  },
+  {
+    "order_id": "PO-2026-000010",
+    "product_id": "PRD-0002",
+    "line_id": "LINE-02",
+    "target_quantity": 1957,
+    "scheduled_start": "2026-01-03T22:00:00Z",
+    "scheduled_end": "2026-01-04T06:00:00Z",
+    "status": "COMPLETED",
+    "planned_cycle_time_sec": 13.5
+  }
+]

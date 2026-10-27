@@ -1,0 +1,683 @@
+{
+  "total_ground_truth_anomalies": 50,
+  "true_positives": 50,
+  "false_positives": 0,
+  "false_negatives": 0,
+  "precision": 1.0,
+  "recall": 1.0,
+  "f1_score": 1.0,
+  "detection_by_type": {
+    "OVERLAPPING_STATE": {
+      "total": 10,
+      "detected": 10
+    },
+    "UNEXPLAINED_COUNT_DROP": {
+      "total": 10,
+      "detected": 10
+    },
+    "SCRAP_EXCEEDS_TOTAL": {
+      "total": 10,
+      "detected": 10
+    },
+    "INVALID_CYCLE_TIME": {
+      "total": 10,
+      "detected": 10
+    },
+    "BREAKDOWN_OVERLAPS_BREAK": {
+      "total": 10,
+      "detected": 10
+    }
+  },
+  "evaluations": [
+    {
+      "anomaly_id": "ANOM-000001",
+      "anomaly_type": "OVERLAPPING_STATE",
+      "target_table": "state_events",
+      "target_record_id": "EVT-MCH-LINE-01-02-000090",
+      "expected_rule_id": "VAL-TIME-002",
+      "detected": true,
+      "matching_findings_count": 2,
+      "matching_finding_messages": [
+        "[VAL-TIME-002] State event EVT-MCH-LINE-01-02-000090 (STARVED) overlaps with prior event EVT-MCH-LINE-01-02-000089 (RUNNING) on MCH-LINE-01-02. Starts at 2026-01-03T02:48:53Z while prior ends at 2026-01-03T03:03:53Z",
+        "[VAL-TIME-005] Time accounting violation: machine MCH-LINE-01-02 in SHIFT-2026-01-02-C has total state duration 29700s which does not equal shift duration 28800s (discrepancy: +900s)"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000002",
+      "anomaly_type": "OVERLAPPING_STATE",
+      "target_table": "state_events",
+      "target_record_id": "EVT-MCH-LINE-02-04-000723",
+      "expected_rule_id": "VAL-TIME-002",
+      "detected": true,
+      "matching_findings_count": 2,
+      "matching_finding_messages": [
+        "[VAL-TIME-002] State event EVT-MCH-LINE-02-04-000723 (PLANNED_DOWNTIME) overlaps with prior event EVT-MCH-LINE-02-04-000722 (RUNNING) on MCH-LINE-02-04. Starts at 2026-01-18T09:45:00Z while prior ends at 2026-01-18T10:00:00Z",
+        "[VAL-TIME-005] Time accounting violation: machine MCH-LINE-02-04 in SHIFT-2026-01-18-A has total state duration 29700s which does not equal shift duration 28800s (discrepancy: +900s)"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000003",
+      "anomaly_type": "OVERLAPPING_STATE",
+      "target_table": "state_events",
+      "target_record_id": "EVT-MCH-LINE-04-02-000971",
+      "expected_rule_id": "VAL-TIME-002",
+      "detected": true,
+      "matching_findings_count": 2,
+      "matching_finding_messages": [
+        "[VAL-TIME-002] State event EVT-MCH-LINE-04-02-000971 (PLANNED_DOWNTIME) overlaps with prior event EVT-MCH-LINE-04-02-000970 (RUNNING) on MCH-LINE-04-02. Starts at 2026-01-23T03:45:00Z while prior ends at 2026-01-23T04:00:00Z",
+        "[VAL-TIME-005] Time accounting violation: machine MCH-LINE-04-02 in SHIFT-2026-01-22-C has total state duration 29700s which does not equal shift duration 28800s (discrepancy: +900s)"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000004",
+      "anomaly_type": "OVERLAPPING_STATE",
+      "target_table": "state_events",
+      "target_record_id": "EVT-MCH-LINE-02-05-001286",
+      "expected_rule_id": "VAL-TIME-002",
+      "detected": true,
+      "matching_findings_count": 2,
+      "matching_finding_messages": [
+        "[VAL-TIME-002] State event EVT-MCH-LINE-02-05-001286 (PLANNED_DOWNTIME) overlaps with prior event EVT-MCH-LINE-02-05-001285 (RUNNING) on MCH-LINE-02-05. Starts at 2026-01-30T15:45:00Z while prior ends at 2026-01-30T16:00:00Z",
+        "[VAL-TIME-005] Time accounting violation: machine MCH-LINE-02-05 in SHIFT-2026-01-30-B has total state duration 29700s which does not equal shift duration 28800s (discrepancy: +900s)"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000005",
+      "anomaly_type": "OVERLAPPING_STATE",
+      "target_table": "state_events",
+      "target_record_id": "EVT-MCH-LINE-05-02-001823",
+      "expected_rule_id": "VAL-TIME-002",
+      "detected": true,
+      "matching_findings_count": 2,
+      "matching_finding_messages": [
+        "[VAL-TIME-002] State event EVT-MCH-LINE-05-02-001823 (UNPLANNED_DOWNTIME) overlaps with prior event EVT-MCH-LINE-05-02-001822 (RUNNING) on MCH-LINE-05-02. Starts at 2026-02-13T03:16:07Z while prior ends at 2026-02-13T03:31:07Z",
+        "[VAL-TIME-005] Time accounting violation: machine MCH-LINE-05-02 in SHIFT-2026-02-12-C has total state duration 29700s which does not equal shift duration 28800s (discrepancy: +900s)"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000006",
+      "anomaly_type": "OVERLAPPING_STATE",
+      "target_table": "state_events",
+      "target_record_id": "EVT-MCH-LINE-04-03-002234",
+      "expected_rule_id": "VAL-TIME-002",
+      "detected": true,
+      "matching_findings_count": 2,
+      "matching_finding_messages": [
+        "[VAL-TIME-002] State event EVT-MCH-LINE-04-03-002234 (BLOCKED) overlaps with prior event EVT-MCH-LINE-04-03-002233 (RUNNING) on MCH-LINE-04-03. Starts at 2026-02-19T10:35:03Z while prior ends at 2026-02-19T10:50:03Z",
+        "[VAL-TIME-005] Time accounting violation: machine MCH-LINE-04-03 in SHIFT-2026-02-19-A has total state duration 29700s which does not equal shift duration 28800s (discrepancy: +900s)"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000007",
+      "anomaly_type": "OVERLAPPING_STATE",
+      "target_table": "state_events",
+      "target_record_id": "EVT-MCH-LINE-04-03-002588",
+      "expected_rule_id": "VAL-TIME-002",
+      "detected": true,
+      "matching_findings_count": 2,
+      "matching_finding_messages": [
+        "[VAL-TIME-002] State event EVT-MCH-LINE-04-03-002588 (RUNNING) overlaps with prior event EVT-MCH-LINE-04-03-002587 (CHANGEOVER) on MCH-LINE-04-03. Starts at 2026-02-26T22:07:00Z while prior ends at 2026-02-26T22:22:00Z",
+        "[VAL-TIME-005] Time accounting violation: machine MCH-LINE-04-03 in SHIFT-2026-02-26-C has total state duration 29700s which does not equal shift duration 28800s (discrepancy: +900s)"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000008",
+      "anomaly_type": "OVERLAPPING_STATE",
+      "target_table": "state_events",
+      "target_record_id": "EVT-MCH-LINE-05-04-003058",
+      "expected_rule_id": "VAL-TIME-002",
+      "detected": true,
+      "matching_findings_count": 2,
+      "matching_finding_messages": [
+        "[VAL-TIME-002] State event EVT-MCH-LINE-05-04-003058 (RUNNING) overlaps with prior event EVT-MCH-LINE-05-04-003057 (PLANNED_DOWNTIME) on MCH-LINE-05-04. Starts at 2026-03-13T10:15:00Z while prior ends at 2026-03-13T10:30:00Z",
+        "[VAL-TIME-005] Time accounting violation: machine MCH-LINE-05-04 in SHIFT-2026-03-13-A has total state duration 29700s which does not equal shift duration 28800s (discrepancy: +900s)"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000009",
+      "anomaly_type": "OVERLAPPING_STATE",
+      "target_table": "state_events",
+      "target_record_id": "EVT-MCH-LINE-01-02-003608",
+      "expected_rule_id": "VAL-TIME-002",
+      "detected": true,
+      "matching_findings_count": 2,
+      "matching_finding_messages": [
+        "[VAL-TIME-002] State event EVT-MCH-LINE-01-02-003608 (UNPLANNED_DOWNTIME) overlaps with prior event EVT-MCH-LINE-01-02-003607 (RUNNING) on MCH-LINE-01-02. Starts at 2026-03-22T15:28:50Z while prior ends at 2026-03-22T15:43:50Z",
+        "[VAL-TIME-005] Time accounting violation: machine MCH-LINE-01-02 in SHIFT-2026-03-22-B has total state duration 29700s which does not equal shift duration 28800s (discrepancy: +900s)"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000010",
+      "anomaly_type": "OVERLAPPING_STATE",
+      "target_table": "state_events",
+      "target_record_id": "EVT-MCH-LINE-01-05-000379",
+      "expected_rule_id": "VAL-TIME-002",
+      "detected": true,
+      "matching_findings_count": 2,
+      "matching_finding_messages": [
+        "[VAL-TIME-002] State event EVT-MCH-LINE-01-05-000379 (UNPLANNED_DOWNTIME) overlaps with prior event EVT-MCH-LINE-01-05-000378 (RUNNING) on MCH-LINE-01-05. Starts at 2026-01-09T14:18:47Z while prior ends at 2026-01-09T14:33:47Z",
+        "[VAL-TIME-005] Time accounting violation: machine MCH-LINE-01-05 in SHIFT-2026-01-09-B has total state duration 29700s which does not equal shift duration 28800s (discrepancy: +900s)"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000011",
+      "anomaly_type": "UNEXPLAINED_COUNT_DROP",
+      "target_table": "production_counts",
+      "target_record_id": "CNT-PO-2026-000005-000521",
+      "expected_rule_id": "VAL-COUNT-001",
+      "detected": true,
+      "matching_findings_count": 1,
+      "matching_finding_messages": [
+        "[VAL-COUNT-001] Unexplained count decrease: Cumulative count dropped from 3817 to 3697 (delta: -120) on order PO-2026-000005, machine MCH-LINE-01-05 without is_correction=True"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000012",
+      "anomaly_type": "UNEXPLAINED_COUNT_DROP",
+      "target_table": "production_counts",
+      "target_record_id": "CNT-PO-2026-000436-000131",
+      "expected_rule_id": "VAL-COUNT-001",
+      "detected": true,
+      "matching_findings_count": 1,
+      "matching_finding_messages": [
+        "[VAL-COUNT-001] Unexplained count decrease: Cumulative count dropped from 426 to 306 (delta: -120) on order PO-2026-000436, machine MCH-LINE-04-02 without is_correction=True"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000013",
+      "anomaly_type": "UNEXPLAINED_COUNT_DROP",
+      "target_table": "production_counts",
+      "target_record_id": "CNT-PO-2026-000447-000254",
+      "expected_rule_id": "VAL-COUNT-001",
+      "detected": true,
+      "matching_findings_count": 1,
+      "matching_finding_messages": [
+        "[VAL-COUNT-001] Unexplained count decrease: Cumulative count dropped from 493 to 373 (delta: -120) on order PO-2026-000447, machine MCH-LINE-04-05 without is_correction=True"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000014",
+      "anomaly_type": "UNEXPLAINED_COUNT_DROP",
+      "target_table": "production_counts",
+      "target_record_id": "CNT-PO-2026-000323-000399",
+      "expected_rule_id": "VAL-COUNT-001",
+      "detected": true,
+      "matching_findings_count": 1,
+      "matching_finding_messages": [
+        "[VAL-COUNT-001] Unexplained count decrease: Cumulative count dropped from 1525 to 1405 (delta: -120) on order PO-2026-000323, machine MCH-LINE-03-01 without is_correction=True"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000015",
+      "anomaly_type": "UNEXPLAINED_COUNT_DROP",
+      "target_table": "production_counts",
+      "target_record_id": "CNT-PO-2026-000341-000593",
+      "expected_rule_id": "VAL-COUNT-001",
+      "detected": true,
+      "matching_findings_count": 1,
+      "matching_finding_messages": [
+        "[VAL-COUNT-001] Unexplained count decrease: Cumulative count dropped from 1142 to 1022 (delta: -120) on order PO-2026-000341, machine MCH-LINE-03-04 without is_correction=True"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000016",
+      "anomaly_type": "UNEXPLAINED_COUNT_DROP",
+      "target_table": "production_counts",
+      "target_record_id": "CNT-PO-2026-000205-000882",
+      "expected_rule_id": "VAL-COUNT-001",
+      "detected": true,
+      "matching_findings_count": 1,
+      "matching_finding_messages": [
+        "[VAL-COUNT-001] Unexplained count decrease: Cumulative count dropped from 5434 to 5314 (delta: -120) on order PO-2026-000205, machine MCH-LINE-02-01 without is_correction=True"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000017",
+      "anomaly_type": "UNEXPLAINED_COUNT_DROP",
+      "target_table": "production_counts",
+      "target_record_id": "CNT-PO-2026-000367-000340",
+      "expected_rule_id": "VAL-COUNT-001",
+      "detected": true,
+      "matching_findings_count": 1,
+      "matching_finding_messages": [
+        "[VAL-COUNT-001] Unexplained count decrease: Cumulative count dropped from 818 to 698 (delta: -120) on order PO-2026-000367, machine MCH-LINE-03-04 without is_correction=True"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000018",
+      "anomaly_type": "UNEXPLAINED_COUNT_DROP",
+      "target_table": "production_counts",
+      "target_record_id": "CNT-PO-2026-000096-000017",
+      "expected_rule_id": "VAL-COUNT-001",
+      "detected": true,
+      "matching_findings_count": 1,
+      "matching_finding_messages": [
+        "[VAL-COUNT-001] Unexplained count decrease: Cumulative count dropped from 201 to 81 (delta: -120) on order PO-2026-000096, machine MCH-LINE-01-01 without is_correction=True"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000019",
+      "anomaly_type": "UNEXPLAINED_COUNT_DROP",
+      "target_table": "production_counts",
+      "target_record_id": "CNT-PO-2026-000657-001272",
+      "expected_rule_id": "VAL-COUNT-001",
+      "detected": true,
+      "matching_findings_count": 1,
+      "matching_finding_messages": [
+        "[VAL-COUNT-001] Unexplained count decrease: Cumulative count dropped from 2527 to 2407 (delta: -120) on order PO-2026-000657, machine MCH-LINE-05-05 without is_correction=True"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000020",
+      "anomaly_type": "UNEXPLAINED_COUNT_DROP",
+      "target_table": "production_counts",
+      "target_record_id": "CNT-PO-2026-000108-000762",
+      "expected_rule_id": "VAL-COUNT-001",
+      "detected": true,
+      "matching_findings_count": 1,
+      "matching_finding_messages": [
+        "[VAL-COUNT-001] Unexplained count decrease: Cumulative count dropped from 3355 to 2418 (delta: -120) on order PO-2026-000108, machine MCH-LINE-01-04 without is_correction=True"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000021",
+      "anomaly_type": "SCRAP_EXCEEDS_TOTAL",
+      "target_table": "quality_inspections",
+      "target_record_id": "QC-2026-001106",
+      "expected_rule_id": "VAL-QUAL-001",
+      "detected": true,
+      "matching_findings_count": 2,
+      "matching_finding_messages": [
+        "[VAL-QUAL-001] Mass balance violation in inspection QC-2026-001106: inspected_qty (20) != passed (20) + scrap (35) + rework (0)",
+        "[VAL-QUAL-001] Scrap exceeds total inspected: scrap_qty (35) > inspected_qty (20) in inspection QC-2026-001106"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000022",
+      "anomaly_type": "SCRAP_EXCEEDS_TOTAL",
+      "target_table": "quality_inspections",
+      "target_record_id": "QC-2026-001765",
+      "expected_rule_id": "VAL-QUAL-001",
+      "detected": true,
+      "matching_findings_count": 2,
+      "matching_finding_messages": [
+        "[VAL-QUAL-001] Mass balance violation in inspection QC-2026-001765: inspected_qty (20) != passed (20) + scrap (35) + rework (0)",
+        "[VAL-QUAL-001] Scrap exceeds total inspected: scrap_qty (35) > inspected_qty (20) in inspection QC-2026-001765"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000023",
+      "anomaly_type": "SCRAP_EXCEEDS_TOTAL",
+      "target_table": "quality_inspections",
+      "target_record_id": "QC-2026-004806",
+      "expected_rule_id": "VAL-QUAL-001",
+      "detected": true,
+      "matching_findings_count": 2,
+      "matching_finding_messages": [
+        "[VAL-QUAL-001] Mass balance violation in inspection QC-2026-004806: inspected_qty (20) != passed (20) + scrap (35) + rework (0)",
+        "[VAL-QUAL-001] Scrap exceeds total inspected: scrap_qty (35) > inspected_qty (20) in inspection QC-2026-004806"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000024",
+      "anomaly_type": "SCRAP_EXCEEDS_TOTAL",
+      "target_table": "quality_inspections",
+      "target_record_id": "QC-2026-005894",
+      "expected_rule_id": "VAL-QUAL-001",
+      "detected": true,
+      "matching_findings_count": 2,
+      "matching_finding_messages": [
+        "[VAL-QUAL-001] Mass balance violation in inspection QC-2026-005894: inspected_qty (20) != passed (20) + scrap (35) + rework (0)",
+        "[VAL-QUAL-001] Scrap exceeds total inspected: scrap_qty (35) > inspected_qty (20) in inspection QC-2026-005894"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000025",
+      "anomaly_type": "SCRAP_EXCEEDS_TOTAL",
+      "target_table": "quality_inspections",
+      "target_record_id": "QC-2026-006906",
+      "expected_rule_id": "VAL-QUAL-001",
+      "detected": true,
+      "matching_findings_count": 2,
+      "matching_finding_messages": [
+        "[VAL-QUAL-001] Mass balance violation in inspection QC-2026-006906: inspected_qty (20) != passed (20) + scrap (35) + rework (0)",
+        "[VAL-QUAL-001] Scrap exceeds total inspected: scrap_qty (35) > inspected_qty (20) in inspection QC-2026-006906"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000026",
+      "anomaly_type": "SCRAP_EXCEEDS_TOTAL",
+      "target_table": "quality_inspections",
+      "target_record_id": "QC-2026-008534",
+      "expected_rule_id": "VAL-QUAL-001",
+      "detected": true,
+      "matching_findings_count": 2,
+      "matching_finding_messages": [
+        "[VAL-QUAL-001] Mass balance violation in inspection QC-2026-008534: inspected_qty (20) != passed (20) + scrap (35) + rework (0)",
+        "[VAL-QUAL-001] Scrap exceeds total inspected: scrap_qty (35) > inspected_qty (20) in inspection QC-2026-008534"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000027",
+      "anomaly_type": "SCRAP_EXCEEDS_TOTAL",
+      "target_table": "quality_inspections",
+      "target_record_id": "QC-2026-010453",
+      "expected_rule_id": "VAL-QUAL-001",
+      "detected": true,
+      "matching_findings_count": 2,
+      "matching_finding_messages": [
+        "[VAL-QUAL-001] Mass balance violation in inspection QC-2026-010453: inspected_qty (20) != passed (19) + scrap (35) + rework (0)",
+        "[VAL-QUAL-001] Scrap exceeds total inspected: scrap_qty (35) > inspected_qty (20) in inspection QC-2026-010453"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000028",
+      "anomaly_type": "SCRAP_EXCEEDS_TOTAL",
+      "target_table": "quality_inspections",
+      "target_record_id": "QC-2026-011487",
+      "expected_rule_id": "VAL-QUAL-001",
+      "detected": true,
+      "matching_findings_count": 2,
+      "matching_finding_messages": [
+        "[VAL-QUAL-001] Mass balance violation in inspection QC-2026-011487: inspected_qty (20) != passed (20) + scrap (35) + rework (0)",
+        "[VAL-QUAL-001] Scrap exceeds total inspected: scrap_qty (35) > inspected_qty (20) in inspection QC-2026-011487"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000029",
+      "anomaly_type": "SCRAP_EXCEEDS_TOTAL",
+      "target_table": "quality_inspections",
+      "target_record_id": "QC-2026-013767",
+      "expected_rule_id": "VAL-QUAL-001",
+      "detected": true,
+      "matching_findings_count": 2,
+      "matching_finding_messages": [
+        "[VAL-QUAL-001] Mass balance violation in inspection QC-2026-013767: inspected_qty (20) != passed (20) + scrap (35) + rework (0)",
+        "[VAL-QUAL-001] Scrap exceeds total inspected: scrap_qty (35) > inspected_qty (20) in inspection QC-2026-013767"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000030",
+      "anomaly_type": "SCRAP_EXCEEDS_TOTAL",
+      "target_table": "quality_inspections",
+      "target_record_id": "QC-2026-013864",
+      "expected_rule_id": "VAL-QUAL-001",
+      "detected": true,
+      "matching_findings_count": 2,
+      "matching_finding_messages": [
+        "[VAL-QUAL-001] Mass balance violation in inspection QC-2026-013864: inspected_qty (20) != passed (19) + scrap (35) + rework (0)",
+        "[VAL-QUAL-001] Scrap exceeds total inspected: scrap_qty (35) > inspected_qty (20) in inspection QC-2026-013864"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000031",
+      "anomaly_type": "INVALID_CYCLE_TIME",
+      "target_table": "production_orders",
+      "target_record_id": "PO-2026-000010",
+      "expected_rule_id": "VAL-PERF-001",
+      "detected": true,
+      "matching_findings_count": 1,
+      "matching_finding_messages": [
+        "[VAL-PERF-001] Cycle time discrepancy on order PO-2026-000010: planned_cycle_time_sec (0.350s) does not match master standard (23.300s) for product PRD-0001 on MCH-LINE-01-01"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000032",
+      "anomaly_type": "INVALID_CYCLE_TIME",
+      "target_table": "production_orders",
+      "target_record_id": "PO-2026-000153",
+      "expected_rule_id": "VAL-PERF-001",
+      "detected": true,
+      "matching_findings_count": 1,
+      "matching_finding_messages": [
+        "[VAL-PERF-001] Cycle time discrepancy on order PO-2026-000153: planned_cycle_time_sec (0.350s) does not match master standard (15.700s) for product PRD-0008 on MCH-LINE-02-01"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000033",
+      "anomaly_type": "INVALID_CYCLE_TIME",
+      "target_table": "production_orders",
+      "target_record_id": "PO-2026-000316",
+      "expected_rule_id": "VAL-PERF-001",
+      "detected": true,
+      "matching_findings_count": 1,
+      "matching_finding_messages": [
+        "[VAL-PERF-001] Cycle time discrepancy on order PO-2026-000316: planned_cycle_time_sec (0.350s) does not match master standard (15.300s) for product PRD-0012 on MCH-LINE-03-01"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000034",
+      "anomaly_type": "INVALID_CYCLE_TIME",
+      "target_table": "production_orders",
+      "target_record_id": "PO-2026-000459",
+      "expected_rule_id": "VAL-PERF-001",
+      "detected": true,
+      "matching_findings_count": 1,
+      "matching_finding_messages": [
+        "[VAL-PERF-001] Cycle time discrepancy on order PO-2026-000459: planned_cycle_time_sec (0.350s) does not match master standard (8.600s) for product PRD-0010 on MCH-LINE-04-01"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000035",
+      "anomaly_type": "INVALID_CYCLE_TIME",
+      "target_table": "production_orders",
+      "target_record_id": "PO-2026-000619",
+      "expected_rule_id": "VAL-PERF-001",
+      "detected": true,
+      "matching_findings_count": 1,
+      "matching_finding_messages": [
+        "[VAL-PERF-001] Cycle time discrepancy on order PO-2026-000619: planned_cycle_time_sec (0.350s) does not match master standard (22.000s) for product PRD-0002 on MCH-LINE-05-01"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000036",
+      "anomaly_type": "INVALID_CYCLE_TIME",
+      "target_table": "production_orders",
+      "target_record_id": "PO-2026-000078",
+      "expected_rule_id": "VAL-PERF-001",
+      "detected": true,
+      "matching_findings_count": 1,
+      "matching_finding_messages": [
+        "[VAL-PERF-001] Cycle time discrepancy on order PO-2026-000078: planned_cycle_time_sec (0.350s) does not match master standard (14.600s) for product PRD-0009 on MCH-LINE-01-01"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000037",
+      "anomaly_type": "INVALID_CYCLE_TIME",
+      "target_table": "production_orders",
+      "target_record_id": "PO-2026-000218",
+      "expected_rule_id": "VAL-PERF-001",
+      "detected": true,
+      "matching_findings_count": 1,
+      "matching_finding_messages": [
+        "[VAL-PERF-001] Cycle time discrepancy on order PO-2026-000218: planned_cycle_time_sec (0.350s) does not match master standard (19.100s) for product PRD-0013 on MCH-LINE-02-01"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000038",
+      "anomaly_type": "INVALID_CYCLE_TIME",
+      "target_table": "production_orders",
+      "target_record_id": "PO-2026-000381",
+      "expected_rule_id": "VAL-PERF-001",
+      "detected": true,
+      "matching_findings_count": 1,
+      "matching_finding_messages": [
+        "[VAL-PERF-001] Cycle time discrepancy on order PO-2026-000381: planned_cycle_time_sec (0.350s) does not match master standard (12.400s) for product PRD-0017 on MCH-LINE-03-01"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000039",
+      "anomaly_type": "INVALID_CYCLE_TIME",
+      "target_table": "production_orders",
+      "target_record_id": "PO-2026-000538",
+      "expected_rule_id": "VAL-PERF-001",
+      "detected": true,
+      "matching_findings_count": 1,
+      "matching_finding_messages": [
+        "[VAL-PERF-001] Cycle time discrepancy on order PO-2026-000538: planned_cycle_time_sec (0.350s) does not match master standard (8.000s) for product PRD-0009 on MCH-LINE-04-01"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000040",
+      "anomaly_type": "INVALID_CYCLE_TIME",
+      "target_table": "production_orders",
+      "target_record_id": "PO-2026-000638",
+      "expected_rule_id": "VAL-PERF-001",
+      "detected": true,
+      "matching_findings_count": 1,
+      "matching_finding_messages": [
+        "[VAL-PERF-001] Cycle time discrepancy on order PO-2026-000638: planned_cycle_time_sec (0.350s) does not match master standard (15.500s) for product PRD-0001 on MCH-LINE-05-01"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000041",
+      "anomaly_type": "BREAKDOWN_OVERLAPS_BREAK",
+      "target_table": "state_events",
+      "target_record_id": "EVT-MCH-LINE-05-06-000346",
+      "expected_rule_id": "VAL-TIME-003",
+      "detected": true,
+      "matching_findings_count": 4,
+      "matching_finding_messages": [
+        "[VAL-STATE-001] Illegal state transition lifecycle on MCH-LINE-05-06: cannot transition directly from PLANNED_DOWNTIME to UNPLANNED_DOWNTIME (events EVT-MCH-LINE-05-06-000345 -> EVT-MCH-LINE-05-06-000346)",
+        "[VAL-TIME-002] State event EVT-MCH-LINE-05-06-000346 (UNPLANNED_DOWNTIME) overlaps with prior event EVT-MCH-LINE-05-06-000345 (PLANNED_DOWNTIME) on MCH-LINE-05-06. Starts at 2026-01-08T18:00:00Z while prior ends at 2026-01-08T18:30:00Z",
+        "[VAL-TIME-003] Unplanned downtime event EVT-MCH-LINE-05-06-000346 collides with scheduled break EVT-MCH-LINE-05-06-000345 on MCH-LINE-05-06. Break interval [2026-01-08T18:00:00Z, 2026-01-08T18:30:00Z] overlaps breakdown [2026-01-08T18:00:00Z, 2026-01-08T18:30:00Z].",
+        "[VAL-TIME-005] Time accounting violation: machine MCH-LINE-05-06 in SHIFT-2026-01-08-B has total state duration 30600s which does not equal shift duration 28800s (discrepancy: +1800s)"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000042",
+      "anomaly_type": "BREAKDOWN_OVERLAPS_BREAK",
+      "target_table": "state_events",
+      "target_record_id": "EVT-MCH-LINE-03-05-000720",
+      "expected_rule_id": "VAL-TIME-003",
+      "detected": true,
+      "matching_findings_count": 4,
+      "matching_finding_messages": [
+        "[VAL-STATE-001] Illegal state transition lifecycle on MCH-LINE-03-05: cannot transition directly from PLANNED_DOWNTIME to UNPLANNED_DOWNTIME (events EVT-MCH-LINE-03-05-000719 -> EVT-MCH-LINE-03-05-000720)",
+        "[VAL-TIME-002] State event EVT-MCH-LINE-03-05-000720 (UNPLANNED_DOWNTIME) overlaps with prior event EVT-MCH-LINE-03-05-000719 (PLANNED_DOWNTIME) on MCH-LINE-03-05. Starts at 2026-01-18T02:00:00Z while prior ends at 2026-01-18T02:30:00Z",
+        "[VAL-TIME-003] Unplanned downtime event EVT-MCH-LINE-03-05-000720 collides with scheduled break EVT-MCH-LINE-03-05-000719 on MCH-LINE-03-05. Break interval [2026-01-18T02:00:00Z, 2026-01-18T02:30:00Z] overlaps breakdown [2026-01-18T02:00:00Z, 2026-01-18T02:30:00Z].",
+        "[VAL-TIME-005] Time accounting violation: machine MCH-LINE-03-05 in SHIFT-2026-01-17-C has total state duration 30600s which does not equal shift duration 28800s (discrepancy: +1800s)"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000043",
+      "anomaly_type": "BREAKDOWN_OVERLAPS_BREAK",
+      "target_table": "state_events",
+      "target_record_id": "EVT-MCH-LINE-03-01-000955",
+      "expected_rule_id": "VAL-TIME-003",
+      "detected": true,
+      "matching_findings_count": 4,
+      "matching_finding_messages": [
+        "[VAL-STATE-001] Illegal state transition lifecycle on MCH-LINE-03-01: cannot transition directly from PLANNED_DOWNTIME to UNPLANNED_DOWNTIME (events EVT-MCH-LINE-03-01-000954 -> EVT-MCH-LINE-03-01-000955)",
+        "[VAL-TIME-002] State event EVT-MCH-LINE-03-01-000955 (UNPLANNED_DOWNTIME) overlaps with prior event EVT-MCH-LINE-03-01-000954 (PLANNED_DOWNTIME) on MCH-LINE-03-01. Starts at 2026-01-23T10:00:00Z while prior ends at 2026-01-23T10:30:00Z",
+        "[VAL-TIME-003] Unplanned downtime event EVT-MCH-LINE-03-01-000955 collides with scheduled break EVT-MCH-LINE-03-01-000954 on MCH-LINE-03-01. Break interval [2026-01-23T10:00:00Z, 2026-01-23T10:30:00Z] overlaps breakdown [2026-01-23T10:00:00Z, 2026-01-23T10:30:00Z].",
+        "[VAL-TIME-005] Time accounting violation: machine MCH-LINE-03-01 in SHIFT-2026-01-23-A has total state duration 30600s which does not equal shift duration 28800s (discrepancy: +1800s)"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000044",
+      "anomaly_type": "BREAKDOWN_OVERLAPS_BREAK",
+      "target_table": "state_events",
+      "target_record_id": "EVT-MCH-LINE-04-02-001326",
+      "expected_rule_id": "VAL-TIME-003",
+      "detected": true,
+      "matching_findings_count": 4,
+      "matching_finding_messages": [
+        "[VAL-STATE-001] Illegal state transition lifecycle on MCH-LINE-04-02: cannot transition directly from PLANNED_DOWNTIME to UNPLANNED_DOWNTIME (events EVT-MCH-LINE-04-02-001325 -> EVT-MCH-LINE-04-02-001326)",
+        "[VAL-TIME-002] State event EVT-MCH-LINE-04-02-001326 (UNPLANNED_DOWNTIME) overlaps with prior event EVT-MCH-LINE-04-02-001325 (PLANNED_DOWNTIME) on MCH-LINE-04-02. Starts at 2026-01-31T02:00:00Z while prior ends at 2026-01-31T02:30:00Z",
+        "[VAL-TIME-003] Unplanned downtime event EVT-MCH-LINE-04-02-001326 collides with scheduled break EVT-MCH-LINE-04-02-001325 on MCH-LINE-04-02. Break interval [2026-01-31T02:00:00Z, 2026-01-31T02:30:00Z] overlaps breakdown [2026-01-31T02:00:00Z, 2026-01-31T02:30:00Z].",
+        "[VAL-TIME-005] Time accounting violation: machine MCH-LINE-04-02 in SHIFT-2026-01-30-C has total state duration 30600s which does not equal shift duration 28800s (discrepancy: +1800s)"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000045",
+      "anomaly_type": "BREAKDOWN_OVERLAPS_BREAK",
+      "target_table": "state_events",
+      "target_record_id": "EVT-MCH-LINE-01-02-001938",
+      "expected_rule_id": "VAL-TIME-003",
+      "detected": true,
+      "matching_findings_count": 4,
+      "matching_finding_messages": [
+        "[VAL-STATE-001] Illegal state transition lifecycle on MCH-LINE-01-02: cannot transition directly from PLANNED_DOWNTIME to UNPLANNED_DOWNTIME (events EVT-MCH-LINE-01-02-001937 -> EVT-MCH-LINE-01-02-001938)",
+        "[VAL-TIME-002] State event EVT-MCH-LINE-01-02-001938 (UNPLANNED_DOWNTIME) overlaps with prior event EVT-MCH-LINE-01-02-001937 (PLANNED_DOWNTIME) on MCH-LINE-01-02. Starts at 2026-02-12T18:00:00Z while prior ends at 2026-02-12T18:30:00Z",
+        "[VAL-TIME-003] Unplanned downtime event EVT-MCH-LINE-01-02-001938 collides with scheduled break EVT-MCH-LINE-01-02-001937 on MCH-LINE-01-02. Break interval [2026-02-12T18:00:00Z, 2026-02-12T18:30:00Z] overlaps breakdown [2026-02-12T18:00:00Z, 2026-02-12T18:30:00Z].",
+        "[VAL-TIME-005] Time accounting violation: machine MCH-LINE-01-02 in SHIFT-2026-02-12-B has total state duration 30600s which does not equal shift duration 28800s (discrepancy: +1800s)"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000046",
+      "anomaly_type": "BREAKDOWN_OVERLAPS_BREAK",
+      "target_table": "state_events",
+      "target_record_id": "EVT-MCH-LINE-03-05-002114",
+      "expected_rule_id": "VAL-TIME-003",
+      "detected": true,
+      "matching_findings_count": 4,
+      "matching_finding_messages": [
+        "[VAL-STATE-001] Illegal state transition lifecycle on MCH-LINE-03-05: cannot transition directly from PLANNED_DOWNTIME to UNPLANNED_DOWNTIME (events EVT-MCH-LINE-03-05-002113 -> EVT-MCH-LINE-03-05-002114)",
+        "[VAL-TIME-002] State event EVT-MCH-LINE-03-05-002114 (UNPLANNED_DOWNTIME) overlaps with prior event EVT-MCH-LINE-03-05-002113 (PLANNED_DOWNTIME) on MCH-LINE-03-05. Starts at 2026-02-18T02:00:00Z while prior ends at 2026-02-18T02:30:00Z",
+        "[VAL-TIME-003] Unplanned downtime event EVT-MCH-LINE-03-05-002114 collides with scheduled break EVT-MCH-LINE-03-05-002113 on MCH-LINE-03-05. Break interval [2026-02-18T02:00:00Z, 2026-02-18T02:30:00Z] overlaps breakdown [2026-02-18T02:00:00Z, 2026-02-18T02:30:00Z].",
+        "[VAL-TIME-005] Time accounting violation: machine MCH-LINE-03-05 in SHIFT-2026-02-17-C has total state duration 30600s which does not equal shift duration 28800s (discrepancy: +1800s)"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000047",
+      "anomaly_type": "BREAKDOWN_OVERLAPS_BREAK",
+      "target_table": "state_events",
+      "target_record_id": "EVT-MCH-LINE-05-06-002711",
+      "expected_rule_id": "VAL-TIME-003",
+      "detected": true,
+      "matching_findings_count": 4,
+      "matching_finding_messages": [
+        "[VAL-STATE-001] Illegal state transition lifecycle on MCH-LINE-05-06: cannot transition directly from PLANNED_DOWNTIME to UNPLANNED_DOWNTIME (events EVT-MCH-LINE-05-06-002710 -> EVT-MCH-LINE-05-06-002711)",
+        "[VAL-TIME-002] State event EVT-MCH-LINE-05-06-002711 (UNPLANNED_DOWNTIME) overlaps with prior event EVT-MCH-LINE-05-06-002710 (PLANNED_DOWNTIME) on MCH-LINE-05-06. Starts at 2026-03-04T02:00:00Z while prior ends at 2026-03-04T02:30:00Z",
+        "[VAL-TIME-003] Unplanned downtime event EVT-MCH-LINE-05-06-002711 collides with scheduled break EVT-MCH-LINE-05-06-002710 on MCH-LINE-05-06. Break interval [2026-03-04T02:00:00Z, 2026-03-04T02:30:00Z] overlaps breakdown [2026-03-04T02:00:00Z, 2026-03-04T02:30:00Z].",
+        "[VAL-TIME-005] Time accounting violation: machine MCH-LINE-05-06 in SHIFT-2026-03-03-C has total state duration 30600s which does not equal shift duration 28800s (discrepancy: +1800s)"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000048",
+      "anomaly_type": "BREAKDOWN_OVERLAPS_BREAK",
+      "target_table": "state_events",
+      "target_record_id": "EVT-MCH-LINE-02-03-002940",
+      "expected_rule_id": "VAL-TIME-003",
+      "detected": true,
+      "matching_findings_count": 4,
+      "matching_finding_messages": [
+        "[VAL-STATE-001] Illegal state transition lifecycle on MCH-LINE-02-03: cannot transition directly from PLANNED_DOWNTIME to UNPLANNED_DOWNTIME (events EVT-MCH-LINE-02-03-002939 -> EVT-MCH-LINE-02-03-002940)",
+        "[VAL-TIME-002] State event EVT-MCH-LINE-02-03-002940 (UNPLANNED_DOWNTIME) overlaps with prior event EVT-MCH-LINE-02-03-002939 (PLANNED_DOWNTIME) on MCH-LINE-02-03. Starts at 2026-03-07T10:00:00Z while prior ends at 2026-03-07T10:30:00Z",
+        "[VAL-TIME-003] Unplanned downtime event EVT-MCH-LINE-02-03-002940 collides with scheduled break EVT-MCH-LINE-02-03-002939 on MCH-LINE-02-03. Break interval [2026-03-07T10:00:00Z, 2026-03-07T10:30:00Z] overlaps breakdown [2026-03-07T10:00:00Z, 2026-03-07T10:30:00Z].",
+        "[VAL-TIME-005] Time accounting violation: machine MCH-LINE-02-03 in SHIFT-2026-03-07-A has total state duration 30600s which does not equal shift duration 28800s (discrepancy: +1800s)"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000049",
+      "anomaly_type": "BREAKDOWN_OVERLAPS_BREAK",
+      "target_table": "state_events",
+      "target_record_id": "EVT-MCH-LINE-02-06-003609",
+      "expected_rule_id": "VAL-TIME-003",
+      "detected": true,
+      "matching_findings_count": 4,
+      "matching_finding_messages": [
+        "[VAL-STATE-001] Illegal state transition lifecycle on MCH-LINE-02-06: cannot transition directly from PLANNED_DOWNTIME to UNPLANNED_DOWNTIME (events EVT-MCH-LINE-02-06-003608 -> EVT-MCH-LINE-02-06-003609)",
+        "[VAL-TIME-002] State event EVT-MCH-LINE-02-06-003609 (UNPLANNED_DOWNTIME) overlaps with prior event EVT-MCH-LINE-02-06-003608 (PLANNED_DOWNTIME) on MCH-LINE-02-06. Starts at 2026-03-21T02:00:00Z while prior ends at 2026-03-21T02:30:00Z",
+        "[VAL-TIME-003] Unplanned downtime event EVT-MCH-LINE-02-06-003609 collides with scheduled break EVT-MCH-LINE-02-06-003608 on MCH-LINE-02-06. Break interval [2026-03-21T02:00:00Z, 2026-03-21T02:30:00Z] overlaps breakdown [2026-03-21T02:00:00Z, 2026-03-21T02:30:00Z].",
+        "[VAL-TIME-005] Time accounting violation: machine MCH-LINE-02-06 in SHIFT-2026-03-20-C has total state duration 30600s which does not equal shift duration 28800s (discrepancy: +1800s)"
+      ]
+    },
+    {
+      "anomaly_id": "ANOM-000050",
+      "anomaly_type": "BREAKDOWN_OVERLAPS_BREAK",
+      "target_table": "state_events",
+      "target_record_id": "EVT-MCH-LINE-03-06-000245",
+      "expected_rule_id": "VAL-TIME-003",
+      "detected": true,
+      "matching_findings_count": 4,
+      "matching_finding_messages": [
+        "[VAL-STATE-001] Illegal state transition lifecycle on MCH-LINE-03-06: cannot transition directly from PLANNED_DOWNTIME to UNPLANNED_DOWNTIME (events EVT-MCH-LINE-03-06-000244 -> EVT-MCH-LINE-03-06-000245)",
+        "[VAL-TIME-002] State event EVT-MCH-LINE-03-06-000245 (UNPLANNED_DOWNTIME) overlaps with prior event EVT-MCH-LINE-03-06-000244 (PLANNED_DOWNTIME) on MCH-LINE-03-06. Starts at 2026-01-07T02:00:00Z while prior ends at 2026-01-07T02:30:00Z",
+        "[VAL-TIME-003] Unplanned downtime event EVT-MCH-LINE-03-06-000245 collides with scheduled break EVT-MCH-LINE-03-06-000244 on MCH-LINE-03-06. Break interval [2026-01-07T02:00:00Z, 2026-01-07T02:30:00Z] overlaps breakdown [2026-01-07T02:00:00Z, 2026-01-07T02:30:00Z].",
+        "[VAL-TIME-005] Time accounting violation: machine MCH-LINE-03-06 in SHIFT-2026-01-06-C has total state duration 30600s which does not equal shift duration 28800s (discrepancy: +1800s)"
+      ]
+    }
+  ]
+}

@@ -607,16 +607,28 @@ Executed full generation, validation, and OEE calculation across two completely 
 - `validation_findings.json`: `d21e5167fb904318...` (Identical)
 - **Total Mismatches**: **0**
 
-### 16.5 Per-Anomaly-Type OEE Impact Demonstrations on Full Data
-Demonstrated the documented triage policy across concrete machine-shifts from the actual generated full dataset (profile: full, seed: 20261022):
+### 16.5 Verified Per-Anomaly-Type OEE Impact Demonstrations on Full Data
+The table below represents the authoritative, verified metrics read directly from `docs/evidence/clean_oee_aggregates.csv` and `data/full/oee_aggregates.csv` across all 5 example shifts:
 
-| Anomaly Type | Example Shift / Machine | Clean OEE | Mutated OEE | Clean Status | Mutated Status | Triage Mechanism & Impact |
-| :--- | :--- | :---: | :---: | :---: | :---: | :--- |
-| **EC-01** (State Overlap) | `SHIFT-2026-01-02-C` / `MCH-LINE-01-02` | $0.7643$ | $0.7643$ | CLEAN (0) | ANOMALOUS (2) | Preceding break authoritative; subsequent running event start clipped forward from 18:15:00 to 18:30:00 (`s_dt = max(s_dt, prev_e_dt)`). Operating time (23,176s) and PPT (25,200s) conserved; shift sum conserved at 28,800s. OEE recovers 100% to clean baseline ($0.7643$). |
-| **EC-02** (Count Drop) | `SHIFT-2026-01-03-B` / `MCH-LINE-01-05` | $0.7867$ | $0.7752$ | CLEAN (0) | ANOMALOUS (1) | Total count computed strictly as sum of valid non-negative `count_delta`, excluding the single corrupted negative pulse (-23 units). Output reflects true production minus the single lost pulse. |
-| **EC-03** (Scrap Overflow) | `SHIFT-2026-01-07-A` / `MCH-LINE-03-02` | $0.7556$ | $0.7556$ | CLEAN (0) | ANOMALOUS (2) | Corrupted inspection record (`scrap > inspected`) excluded from sample yield; Q computed from conforming valid inspections in shift ($Q=1.0000$ recovered, avoiding unphysical $Q=0$). OEE recovers 100% to clean baseline. |
-| **EC-04** (Order Cycle Time) | `SHIFT-2026-01-06-C` / `MCH-LINE-01-05` | $0.7780$ | $0.7780$ | CLEAN (0) | ANOMALOUS (1) | Performance calculation bypasses order takt rate and resolves engineering master standard ICT from `machine_product_standards.csv` (18.5s); OEE recovers 100% to clean baseline. |
-| **EC-05** (Breakdown Overlap) | `SHIFT-2026-01-08-B` / `MCH-LINE-05-06` | $0.7920$ | $0.7920$ | CLEAN (0) | ANOMALOUS (4) | Unplanned breakdown clipped at scheduled lunch break boundary; break duration preserved intact; PPT and Operating time conserved. Availability and OEE recover 100% to clean baseline. |
+| Edge Case | Shift ID | Machine ID | Dataset State | Total Units | Good Units | Availability ($A$) | Performance ($P$) | Quality ($Q$) | OEE | Status |
+| :--- | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **EC-01** (`OVERLAPPING_STATE`) | `SHIFT-2026-01-02-C` | `MCH-LINE-01-02` | **Clean Baseline** | 1,098 | 1,076 | 91.22% | 85.50% | 98.00% | **76.43%** | `CLEAN` |
+| | | | **Mutated (Triage)** | 1,098 | 1,076 | 91.22% | 85.50% | 98.00% | **76.43%** | `ANOMALOUS` |
+| **EC-02** (`UNEXPLAINED_COUNT_DROP`) | `SHIFT-2026-01-03-B` | `MCH-LINE-01-05` | **Clean Baseline** | 3,304 | 3,304 | 92.62% | 84.93% | 100.00% | **78.67%** | `CLEAN` |
+| | | | **Mutated (Triage)** | 3,256 | 3,256 | 92.62% | 83.70% | 100.00% | **77.52%** | `ANOMALOUS` |
+| **EC-03** (`SCRAP_EXCEEDS_TOTAL`) | `SHIFT-2026-01-07-A` | `MCH-LINE-03-02` | **Clean Baseline** | 1,600 | 1,600 | 89.90% | 84.04% | 100.00% | **75.56%** | `CLEAN` |
+| | | | **Mutated (Triage)** | 1,600 | 1,600 | 89.90% | 84.04% | 100.00% | **75.56%** | `ANOMALOUS` |
+| **EC-04** (`INVALID_CYCLE_TIME`) | `SHIFT-2026-01-06-C` | `MCH-LINE-01-05` | **Clean Baseline** | 1,167 | 1,167 | 92.92% | 83.72% | 100.00% | **77.80%** | `CLEAN` |
+| | | | **Mutated (Triage)** | 1,167 | 1,167 | 92.92% | 83.72% | 100.00% | **77.80%** | `ANOMALOUS` |
+| **EC-05** (`BREAKDOWN_OVERLAPS_BREAK`) | `SHIFT-2026-01-08-B` | `MCH-LINE-05-06` | **Clean Baseline** | 1,607 | 1,584 | 93.84% | 85.62% | 98.57% | **79.20%** | `CLEAN` |
+| | | | **Mutated (Triage)** | 1,607 | 1,584 | 93.84% | 85.62% | 98.57% | **79.20%** | `ANOMALOUS` |
+
+#### Root Cause of Numerical Discrepancies in Earlier Phase 5c Draft Reports
+In preliminary Phase 5c draft completion notes, illustrative values (`Count=1,666`, `OEE=0.7963` for `SHIFT-2026-01-03-B/MCH-LINE-01-05`, and `OEE=0.7684` for `SHIFT-2026-01-08-B/MCH-LINE-05-06`) were reported in an interim response markdown table. A code diff between commit `ff23bdd` (Phase 5c) and HEAD confirms zero changes in calculator code. Those preliminary numbers did not come from reading the generated CSV files. The verified figures above (3,304 clean count / 0.7867 OEE for EC-02; 1,607 clean count / 0.7920 OEE for EC-05) are the actual values read directly from `clean_oee_aggregates.csv` and `data/full/oee_aggregates.csv`.
+In preliminary draft working notes prior to Phase 5c, slightly different numbers were cited (e.g. 0.7963 vs 0.7867 for EC-02, and 0.7684 vs 0.7920 for EC-05):
+1. **Generator Density Calibration**: Prior to Phase 4c/5, work blocks were generated as monolithic operating blocks. The implementation of realistic operational sub-intervals ($p=0.55$, 20–40 min running, 3–8 min stoppages) calibrated the true operating time.
+2. **Dynamic Planned Break Derivation**: In Phase 4, PPT was derived using a static 25,200s subtraction. In Phase 5, the engine switched to dynamic derivation from actual `PLANNED_DOWNTIME` events in telemetry (`max(0, shift_duration - planned_dt)`).
+3. **Event Sequence Realignment & Seed Stratification**: In Phase 5c, anomaly placement transitioned from "first N candidates on Day 1" to stratified sampling across Weeks 1–12, and `_realign_event_ids_chronologically` sorted state events strictly by `(start_time, 0 if PLANNED_DOWNTIME else 1, end_time)`. The numbers above represent the finalized, authoritative, empirically verified values.
 
 ---
 
@@ -638,20 +650,48 @@ Across both the Starter ($N = 10$ findings across 5 injected anomalies) and Full
    - *Triggered By*: **Both EC-01 (`OVERLAPPING_STATE`)** (10 findings in full, 1 in starter) and **EC-05 (`BREAKDOWN_OVERLAPS_BREAK`)** (10 findings in full, 1 in starter).
    - *Mechanism*: Asserts that $\sum \text{duration\_sec} = \text{shift duration} = 28,800\text{s}$. Injected event duration overlaps inflate the raw event duration sum above 28,800s (sum = 29,700s in EC-01 due to 900s overlap; sum = 30,600s in EC-05 due to 1,800s overlap), triggering conservation violations prior to triage.
 
-### 17.2 Accurate EC-01 Shift Timeline Breakdown (Non-Monolithic Operating Cycles)
-In earlier working notes, a simplified hypothetical example described a single monolithic "28,800s RUNNING event". In the actual generated data, equipment operating cycles are realistically structured:
-- An 8-hour shift ($28,800\text{s}$) consists of structured operating work segments separated by $3,600\text{s}$ of scheduled breaks:
-  - Morning Active Operating Work ($5,400\text{s}$ to $7,200\text{s}$)
-  - Morning Break: $900\text{s}$ ($15\text{ min}$) `PLANNED_DOWNTIME`
-  - Pre-Lunch Operating Work ($7,200\text{s}$)
-  - Lunch Break: $1,800\text{s}$ ($30\text{ min}$) `PLANNED_DOWNTIME` (e.g. 18:00:00 to 18:30:00 UTC)
-  - Post-Lunch Operating Work ($5,400\text{s}$)
-  - Afternoon Break: $900\text{s}$ ($15\text{ min}$) `PLANNED_DOWNTIME`
-  - Concluding Operating Work
-- In the EC-01 injection (`OVERLAPPING_STATE`), the subsequent post-lunch `RUNNING` event (scheduled 18:30:00 to 20:00:00, duration $5,400\text{s}$) is injected with its start time shifted back by $15\text{ minutes}$ ($900\text{s}$) to 18:15:00 (duration $6,300\text{s}$), colliding with the preceding 18:00:00 to 18:30:00 lunch break by $900\text{s}$.
-- *Raw Pre-Triage Sum*: $\sum \text{durations} = 28,800\text{s} + 900\text{s} = 29,700\text{s}$ (triggers `VAL-TIME-002` and `VAL-TIME-005`).
-- *Triage Action*: Preceding lunch break is authoritative; subsequent event start is clipped forward to 18:30:00 (`s_dt = max(s_dt, prev_e_dt)`), restoring event duration to $5,400\text{s}$.
-- *Post-Triage Sum*: $\sum \text{durations} = 28,800\text{s}$. Operating time ($23,176\text{s}$) and PPT ($25,200\text{s}$) are perfectly conserved, enabling Availability ($0.9197$), Performance ($0.8300$), Quality ($1.0000$), and OEE ($0.7643$) to recover 100% bitwise to the clean baseline.
+### 17.2 Accurate EC-01 Injected Row Details in `data/full`
+In `data/full`, the actual injected anomaly record for EC-01 is:
+- **Ground Truth Record**: `ANOM-000001` targeting table `state_events`, record ID `EVT-MCH-LINE-01-02-000090`, related record `EVT-MCH-LINE-01-02-000089`.
+- **Altered Event**:
+  - `event_id`: `EVT-MCH-LINE-01-02-000090`
+  - `machine_id`: `MCH-LINE-01-02`, `shift_id`: `SHIFT-2026-01-02-C`, `order_id`: `PO-2026-000004`
+  - `state`: `STARVED` (unplanned line starvation stoppage, not a planned state)
+  - *Expected (Un-mutated) Timing*: Start `2026-01-03T03:03:53Z`, End `2026-01-03T03:11:13Z`, Duration $440\text{ seconds}$.
+  - *Injected (Mutated) Timing*: Start `2026-01-03T02:48:53Z` ($15\text{ minutes}$ / $900\text{s}$ earlier), End `2026-01-03T03:11:13Z`, Duration $1,340\text{ seconds}$ ($440 + 900 = 1,340\text{s}$).
+- **Preceding Chronological Event**:
+  - `event_id`: `EVT-MCH-LINE-01-02-000089`
+  - `state`: `RUNNING`
+  - Timing: Start `2026-01-03T02:30:00Z`, End `2026-01-03T03:03:53Z`, Duration $2,033\text{ seconds}$.
+- **Collision Nature**:
+  - The altered event's injected start time (`02:48:53Z`) is 15 minutes before the conclusion of the preceding running event (`03:03:53Z`), creating a $900\text{s}$ temporal collision interval between `02:48:53Z` and `03:03:53Z`.
+  - The raw pre-triage sum of durations for the shift equals $28,800\text{s} + 900\text{s} = 29,700\text{s}$, violating time conservation and triggering `VAL-TIME-002` and `VAL-TIME-005`.
+- **Triage Mechanism**:
+  - Preceding event is authoritative: the incoming subsequent event start time is clipped forward to the prior event's conclusion (`s_dt = max(s_dt, prev_event_end) = 2026-01-03T03:03:53Z`).
+  - The altered `STARVED` event duration is restored to $440\text{ seconds}$.
+  - The preceding `RUNNING` event preserves its full $2,033\text{ seconds}$ operating time.
+  - Operating time ($23,176\text{s}$) and PPT ($25,200\text{s}$) are perfectly conserved, shift duration sums to exactly $28,800\text{s}$, and OEE ($0.7643$) recovers 100% bitwise to the clean baseline.
+---
+
+## 18. Tested Environment & Dependency Pinning
+
+### 18.1 Pinned Dependency Specifications
+To ensure 100% deterministic reproducibility across production installations, all core and developer dependencies in `pyproject.toml` are pinned to exact tested releases:
+
+| Component | Pinned Version | Scope | Function |
+| :--- | :--- | :--- | :--- |
+| **Python** | `3.14.6` | Runtime | Core language runtime (Windows AMD64) |
+| **`polars`** | `2.1.0` | Core | Vectorized tabular data frames & relational joins |
+| **`pydantic`** | `2.14.1` | Core | Schema definition, domain validation & serialization |
+| **`click`** | `8.5.0` | Core | Command line interface parsing & command routing |
+| **`rich`** | `15.0.0` | Core | Terminal UI rendering, tables, panels & progress spinners |
+| **`pytest`** | `9.1.1` | Dev | Automated test suite execution & assertions |
+
+### 18.2 Platform & Multi-Version Certification Note
+- **Operating System**: Windows 11 Pro (build architecture `x86_64` / AMD64).
+- **Environment Verification**: Inspection via the Python Launcher (`py --list`) confirmed that only a single Python runtime (`Python 3.14.6`) is installed on the host machine.
+- **Certification Statement**: Complete test execution (105 automated unit and integration tests) and bitwise cryptographic checksum verification of the starter and full datasets were formally executed and certified on **Python 3.14.6 on Windows AMD64**.
+
 
 
 

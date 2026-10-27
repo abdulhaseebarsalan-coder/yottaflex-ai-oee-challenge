@@ -1,0 +1,44 @@
+[
+  {
+    "machine_id": "MCH-LINE-01-01",
+    "line_id": "LINE-01",
+    "name": "Station 01 (Cell 01 (Machining))",
+    "sequence_order": 1,
+    "criticality": "HIGH"
+  },
+  {
+    "machine_id": "MCH-LINE-01-02",
+    "line_id": "LINE-01",
+    "name": "Station 02 (Cell 01 (Machining))",
+    "sequence_order": 2,
+    "criticality": "MEDIUM"
+  },
+  {
+    "machine_id": "MCH-LINE-01-03",
+    "line_id": "LINE-01",
+    "name": "Station 03 (Cell 01 (Machining))",
+    "sequence_order": 3,
+    "criticality": "LOW"
+  },
+  {
+    "machine_id": "MCH-LINE-02-01",
+    "line_id": "LINE-02",
+    "name": "Station 01 (Cell 02 (Assembly))",
+    "sequence_order": 1,
+    "criticality": "HIGH"
+  },
+  {
+    "machine_id": "MCH-LINE-02-02",
+    "line_id": "LINE-02",
+    "name": "Station 02 (Cell 02 (Assembly))",
+    "sequence_order": 2,
+    "criticality": "MEDIUM"
+  },
+  {
+    "machine_id": "MCH-LINE-02-03",
+    "line_id": "LINE-02",
+    "name": "Station 03 (Cell 02 (Assembly))",
+    "sequence_order": 3,
+    "criticality": "LOW"
+  }
+]

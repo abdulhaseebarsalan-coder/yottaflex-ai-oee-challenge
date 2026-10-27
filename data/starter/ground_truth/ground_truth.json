@@ -1,0 +1,57 @@
+[
+  {
+    "anomaly_id": "ANOM-000001",
+    "anomaly_type": "OVERLAPPING_STATE",
+    "table_name": "state_events",
+    "record_id": "EVT-MCH-LINE-01-02-000032",
+    "related_record_id": "EVT-MCH-LINE-01-02-000031",
+    "field_name": "start_time",
+    "injected_value": "2026-01-01T18:15:00Z",
+    "expected_value": "2026-01-01T18:30:00Z",
+    "detection_rule_id": "VAL-TIME-002"
+  },
+  {
+    "anomaly_id": "ANOM-000002",
+    "anomaly_type": "UNEXPLAINED_COUNT_DROP",
+    "table_name": "production_counts",
+    "record_id": "CNT-PO-2026-000001-000317",
+    "related_record_id": "CNT-PO-2026-000001-000316",
+    "field_name": "cumulative_count",
+    "injected_value": "2292",
+    "expected_value": "2435",
+    "detection_rule_id": "VAL-COUNT-001"
+  },
+  {
+    "anomaly_id": "ANOM-000003",
+    "anomaly_type": "SCRAP_EXCEEDS_TOTAL",
+    "table_name": "quality_inspections",
+    "record_id": "QC-2026-000009",
+    "related_record_id": "",
+    "field_name": "scrap_qty",
+    "injected_value": "65",
+    "expected_value": "1",
+    "detection_rule_id": "VAL-QUAL-001"
+  },
+  {
+    "anomaly_id": "ANOM-000004",
+    "anomaly_type": "INVALID_CYCLE_TIME",
+    "table_name": "production_orders",
+    "record_id": "PO-2026-000007",
+    "related_record_id": "",
+    "field_name": "planned_cycle_time_sec",
+    "injected_value": "0.35",
+    "expected_value": "17.7",
+    "detection_rule_id": "VAL-PERF-001"
+  },
+  {
+    "anomaly_id": "ANOM-000005",
+    "anomaly_type": "BREAKDOWN_OVERLAPS_BREAK",
+    "table_name": "state_events",
+    "record_id": "EVT-MCH-LINE-02-03-000071",
+    "related_record_id": "EVT-MCH-LINE-02-03-000070",
+    "field_name": "start_time",
+    "injected_value": "2026-01-02T18:00:00Z",
+    "expected_value": "2026-01-02T18:00:00Z",
+    "detection_rule_id": "VAL-TIME-003"
+  }
+]

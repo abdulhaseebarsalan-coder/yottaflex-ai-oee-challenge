@@ -1,0 +1,68 @@
+{
+  "status": "PASSED",
+  "steps": [
+    {
+      "step": "1_create_venv",
+      "command": "C:\\Python314\\python.exe -m venv <TEMP_CLONE_DIR>\\.venv",
+      "returncode": 0,
+      "duration_sec": 8.81,
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "step": "2a_upgrade_pip",
+      "command": "<TEMP_CLONE_DIR>\\.venv\\Scripts\\pip.exe install --upgrade pip",
+      "returncode": 1,
+      "duration_sec": 1.9,
+      "stdout_summary": "Requirement already satisfied: pip in <TEMP_CLONE_DIR>\\.venv\\Lib\\site-packages (26.1.2)\nCollecting pip\n  Using cached pip-26.2.2-py3-none-any.whl.metadata (4.6 kB)\nUsing cached pip-26.2.2-py3-none-any.whl (1.8 MB)",
+      "stderr_summary": "ERROR: To modify pip, please run the following command:\n<TEMP_CLONE_DIR>\\.venv\\Scripts\\python.exe -m pip install --upgrade pip"
+    },
+    {
+      "step": "2b_pip_install_requirements",
+      "command": "<TEMP_CLONE_DIR>\\.venv\\Scripts\\pip.exe install -r requirements.txt",
+      "returncode": 0,
+      "duration_sec": 19.63,
+      "stdout_summary": " installed annotated-types-0.8.0 click-8.5.0 colorama-0.4.6 iniconfig-2.3.1 markdown-it-py-4.2.0 mdurl-0.1.2 packaging-26.3 pluggy-1.7.0 polars-2.1.0 polars-runtime-32-2.1.0 pydantic-2.14.1 pydantic-core-2.50.1 pygments-2.21.0 pytest-9.1.1 rich-15.0.0 typing-extensions-4.16.0 typing-inspection-0.4.4",
+      "stderr_summary": "[notice] A new release of pip is available: 26.1.2 -> 26.2.2\n[notice] To update, run: <TEMP_CLONE_DIR>\\.venv\\Scripts\\python.exe -m pip install --upgrade pip"
+    },
+    {
+      "step": "2c_pip_install_editable",
+      "command": "<TEMP_CLONE_DIR>\\.venv\\Scripts\\pip.exe install -e .",
+      "returncode": 0,
+      "duration_sec": 7.06,
+      "stdout_summary": "2a4067a59032536af24faa9a2cef32e85cca\n  Stored in directory: <PORTABLE_PATH> built yotta-oee\nInstalling collected packages: yotta-oee\nSuccessfully installed yotta-oee-0.1.0",
+      "stderr_summary": "[notice] A new release of pip is available: 26.1.2 -> 26.2.2\n[notice] To update, run: <TEMP_CLONE_DIR>\\.venv\\Scripts\\python.exe -m pip install --upgrade pip"
+    },
+    {
+      "step": "3_run_pytest",
+      "command": "<TEMP_CLONE_DIR>\\.venv\\Scripts\\python.exe -m pytest tests",
+      "returncode": 0,
+      "duration_sec": 20.68,
+      "stdout_summary": "aster PASSED [ 98%]\ntests/test_verifier.py::TestVerificationRunner::test_two_process_verification_starter_deterministic PASSED [ 99%]\ntests/test_verifier.py::TestVerificationRunner::test_cli_verify_command PASSED [100%]\n\n============================ 106 passed in 19.30s =============================",
+      "stderr_summary": ""
+    },
+    {
+      "step": "4_generate_starter",
+      "command": "<TEMP_CLONE_DIR>\\.venv\\Scripts\\python.exe -m yotta_oee generate --profile starter --seed 20261022 --output-dir <TEMP_CLONE_DIR>\\fresh_starter_gen",
+      "returncode": 0,
+      "duration_sec": 1.04,
+      "stdout_summary": "23b3...                 |\n| ground_truth/ground_truth.csv |         5 | 7fe2d018e20e...                 |\n+-----------------------------------------------------------------------------+\nManifest written to: \n<TEMP_CLONE_DIR>\\fresh_starter_gen\\m\nanifest.json",
+      "stderr_summary": ""
+    },
+    {
+      "step": "5_verify_cli",
+      "command": "<TEMP_CLONE_DIR>\\.venv\\Scripts\\python.exe -m yotta_oee verify --profile starter --seed 20261022",
+      "returncode": 0,
+      "duration_sec": 6.84,
+      "stdout_summary": "ac1a801a87... | MATCH  |\n+-----------------------------------------------------------------------------+\n\n[VERDICT] Two-Process Reproducibility: PASS (16 files evaluated)\nReports written to:\n  - reports\\reproducibility_report.json\n  - reports\\validation_summary.json\n  - reports\\validation_summary.md",
+      "stderr_summary": ""
+    }
+  ],
+  "failures": [],
+  "clean_machine_issues": [],
+  "starter_hash_comparison": {
+    "status": "PASS",
+    "files_checked": 13,
+    "all_matched": true
+  }
+}

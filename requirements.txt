@@ -1,0 +1,6 @@
+# Exact pinned dependencies certified on Python 3.14.6 (Windows AMD64)
+pydantic==2.14.1
+polars==2.1.0
+click==8.5.0
+rich==15.0.0
+pytest==9.1.1

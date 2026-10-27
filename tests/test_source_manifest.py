@@ -15,4 +15,5 @@ def test_source_manifest_structure_and_provenance():
     assert data["data_provenance"]["is_synthetic"] is True
     assert len(data["standards_and_references"]) >= 3
     assert "licensing" in data
-    assert data["licensing"]["software_license"] == "MIT License"
+    assert "Chosen by the repository owner" in data["licensing"]["software_license"]
+    assert "Chosen by the repository owner" in data["licensing"]["dataset_license"]

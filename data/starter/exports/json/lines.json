@@ -1,0 +1,14 @@
+[
+  {
+    "line_id": "LINE-01",
+    "plant_id": "PLANT-01",
+    "name": "Cell 01 (Machining)",
+    "line_type": "MACHINING"
+  },
+  {
+    "line_id": "LINE-02",
+    "plant_id": "PLANT-01",
+    "name": "Cell 02 (Assembly)",
+    "line_type": "ASSEMBLY"
+  }
+]

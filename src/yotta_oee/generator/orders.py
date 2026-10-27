@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 import random
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from yotta_oee.domain import Line, MachineProductStandard, OrderStatus, Product, ProductionOrder, Shift
 from yotta_oee.generator.config import GeneratorProfileConfig
