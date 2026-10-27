@@ -11,6 +11,7 @@ from rich.table import Table
 from yotta_oee.calculator.aggregator import OEECalculatorEngine
 from yotta_oee.domain.enums import Severity, ValidationRuleId
 from yotta_oee.evaluator.benchmark import GroundTruthBenchmark
+from yotta_oee.exporter.engine import DatasetExporter
 from yotta_oee.generator.engine import DataGenerationEngine
 from yotta_oee.validator.base import RuleFinding
 from yotta_oee.validator.engine import ValidationEngine
@@ -343,6 +344,53 @@ def benchmark_command(input_dir: Path, findings: Path) -> None:
 
     console.print(type_table)
     console.print("[bold green][SUCCESS][/bold green] Benchmark evaluation completed successfully.\n")
+
+
+# ---------------------------------------------------------------------------
+# 5. Dataset Export Command
+# ---------------------------------------------------------------------------
+@main.command("export")
+@click.option(
+    "--input-dir",
+    "-i",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    default=Path("data/starter"),
+    show_default=True,
+    help="Directory containing dataset CSV files to export.",
+)
+@click.option(
+    "--output-dir",
+    "-o",
+    type=click.Path(file_okay=False, dir_okay=True, path_type=Path),
+    default=None,
+    help="Directory to write export artifacts (default: <input-dir>/exports).",
+)
+@click.option(
+    "--formats",
+    "-f",
+    type=str,
+    default="json,sql",
+    show_default=True,
+    help="Comma-separated export formats: 'json', 'sql', or 'json,sql'.",
+)
+def export_command(input_dir: Path, output_dir: Optional[Path], formats: str) -> None:
+    """Export manufacturing dataset tables into JSON and SQL relational bundles."""
+    format_list = [fmt.strip().lower() for fmt in formats.split(",") if fmt.strip()]
+    exporter = DatasetExporter(input_dir=input_dir, output_dir=output_dir)
+
+    console.print(
+        Panel.fit(
+            f"[bold cyan]YottaFlex Dataset Exporter[/bold cyan]\n"
+            f"Source: [yellow]{input_dir}[/yellow] | Formats: [green]{', '.join(format_list)}[/green]",
+            border_style="cyan",
+        )
+    )
+
+    with console.status("[bold green]Generating exports...", spinner="dots"):
+        manifest = exporter.export_all(formats=format_list)
+
+    console.print(f"[bold green][SUCCESS][/bold green] Export completed to: [bold]{manifest['output_dir']}[/bold]\n")
+    console.print(f"Generated [cyan]{len(manifest['files_generated'])}[/cyan] artifact files across [cyan]{len(manifest['tables'])}[/cyan] domain tables.\n")
 
 
 if __name__ == "__main__":
