@@ -405,8 +405,14 @@ The OEE calculator consumes validation findings without ground truth and execute
 2. **EC-02 (Unexplained Count Drop)**:
    - *Triage*: `total_count` is calculated strictly as the sum of non-negative and valid correction `count_delta` records, completely ignoring corrupted cumulative counters (`sum(count_delta)`).
    - *Impact*: Recovers the true production output minus the single corrupted pulse.
-3. **EC-03 (Scrap Exceeds Inspected)**:
-   - *Triage*: Corrupted inspection records (where $\text{scrap} > \text{inspected}$ or mass balance fails) are excluded from the sample lot calculation. The shift flags the aggregate (`status = ANOMALOUS`) and computes conforming yield from valid remaining inspections. The engine never forces an unphysical $Q = 0.0$.
+3. **EC-03 (Scrap Exceeds Inspected & Fallback Mechanics)**:
+   - *Triage*: Corrupted inspection records (where $\text{scrap} > \text{inspected}$ or mass balance fails $\text{passed} + \text{scrap} + \text{rework} \ne \text{inspected}$) are excluded from the sample lot calculation. The shift flags the aggregate (`status = ANOMALOUS`, `exception_count >= 1`).
+   - *One Valid Inspection Fallback*: When exactly one valid inspection remains in the shift, the quality yield is calculated strictly from that single delivered inspection sample lot:
+     $$\text{Yield}_{\text{sample}} = \frac{\text{Conforming Inspected}}{\text{Total Inspected}} = \frac{\text{Inspected Qty} - \text{Scrap Qty}}{\text{Inspected Qty}}$$
+     Integer good units are scaled as $\operatorname{round}(\text{Total Count} \times \text{Yield}_{\text{sample}})$, and $Q = \frac{\text{Good Count}}{\text{Total Count}}$.
+   - *Zero Valid Inspections Fallback*: When zero valid inspections remain in the shift (all inspections corrupted or absent), the engine defaults to nominal quality yield:
+     $$\text{Yield}_{\text{sample}} = 1.0000 \quad (\text{Good Count} = \text{Total Count}, \text{Scrap Count} = 0)$$
+     *Design Justification*: In discrete telemetry systems where audit records fail schema validation, the engine must not fabricate artificial defect quantities out of thin air or penalize production with an unphysical $Q = 0.0$. Instead, it preserves delivered count data, flags the shift as `ANOMALOUS` with `exception_count >= 1`, and relies on zero data outside the delivered files.
 4. **EC-04 (Order Cycle Time Discrepancy)**:
    - *Triage*: Machine Performance calculation strictly resolves the engineering standard takt time from the authoritative `machine_product_standards.csv` (master ICT), entirely bypassing the erroneous order takt rate.
    - *Impact*: Performance and OEE recover completely to the clean baseline value.
@@ -602,15 +608,51 @@ Executed full generation, validation, and OEE calculation across two completely 
 - **Total Mismatches**: **0**
 
 ### 16.5 Per-Anomaly-Type OEE Impact Demonstrations on Full Data
-Demonstrated the documented triage policy across concrete machine-shifts:
+Demonstrated the documented triage policy across concrete machine-shifts from the actual generated full dataset (profile: full, seed: 20261022):
 
 | Anomaly Type | Example Shift / Machine | Clean OEE | Mutated OEE | Clean Status | Mutated Status | Triage Mechanism & Impact |
 | :--- | :--- | :---: | :---: | :---: | :---: | :--- |
-| **EC-01** (State Overlap) | `SHIFT-2026-01-01-A` / `MCH-LINE-01-01` | $0.7768$ | $0.8056$ | CLEAN (0) | ANOMALOUS (3) | Earlier event truncated at next start; Operating time reduced from 23,755s to 22,855s (-900s), eliminating double counting. |
-| **EC-02** (Count Drop) | `SHIFT-2026-01-01-A` / `MCH-LINE-02-06` | $0.8245$ | $0.8129$ | CLEAN (0) | ANOMALOUS (1) | Total count computed as sum of valid `count_delta`, excluding the single corrupted pulse (-17 units). |
-| **EC-03** (Scrap Overflow) | `SHIFT-2026-01-01-A` / `MCH-LINE-02-05` | $0.7229$ | $0.7229$ | CLEAN (0) | ANOMALOUS (2) | Corrupted inspection record excluded from sample yield; Q computed from conforming valid inspections ($Q=1.0000$ recovered, avoiding unphysical $Q=0$). |
-| **EC-04** (Order Cycle Time) | `SHIFT-2026-01-01-A` / `MCH-LINE-01-02` | $0.7905$ | $0.7905$ | CLEAN (0) | ANOMALOUS (3) | Performance calculation bypasses order takt rate and uses master standard ICT (23.3s); OEE recovers 100% to clean baseline. |
-| **EC-05** (Breakdown Overlap) | `SHIFT-2026-01-01-B` / `MCH-LINE-01-01` | $0.7349$ | $0.7349$ | CLEAN (0) | ANOMALOUS (5) | Breakdown clipped at break boundary; PPT and Operating time preserved; Availability and OEE recover 100% to clean baseline. |
+| **EC-01** (State Overlap) | `SHIFT-2026-01-02-C` / `MCH-LINE-01-02` | $0.7643$ | $0.7643$ | CLEAN (0) | ANOMALOUS (2) | Preceding break authoritative; subsequent running event start clipped forward from 18:15:00 to 18:30:00 (`s_dt = max(s_dt, prev_e_dt)`). Operating time (23,176s) and PPT (25,200s) conserved; shift sum conserved at 28,800s. OEE recovers 100% to clean baseline ($0.7643$). |
+| **EC-02** (Count Drop) | `SHIFT-2026-01-03-B` / `MCH-LINE-01-05` | $0.7867$ | $0.7752$ | CLEAN (0) | ANOMALOUS (1) | Total count computed strictly as sum of valid non-negative `count_delta`, excluding the single corrupted negative pulse (-23 units). Output reflects true production minus the single lost pulse. |
+| **EC-03** (Scrap Overflow) | `SHIFT-2026-01-07-A` / `MCH-LINE-03-02` | $0.7556$ | $0.7556$ | CLEAN (0) | ANOMALOUS (2) | Corrupted inspection record (`scrap > inspected`) excluded from sample yield; Q computed from conforming valid inspections in shift ($Q=1.0000$ recovered, avoiding unphysical $Q=0$). OEE recovers 100% to clean baseline. |
+| **EC-04** (Order Cycle Time) | `SHIFT-2026-01-06-C` / `MCH-LINE-01-05` | $0.7780$ | $0.7780$ | CLEAN (0) | ANOMALOUS (1) | Performance calculation bypasses order takt rate and resolves engineering master standard ICT from `machine_product_standards.csv` (18.5s); OEE recovers 100% to clean baseline. |
+| **EC-05** (Breakdown Overlap) | `SHIFT-2026-01-08-B` / `MCH-LINE-05-06` | $0.7920$ | $0.7920$ | CLEAN (0) | ANOMALOUS (4) | Unplanned breakdown clipped at scheduled lunch break boundary; break duration preserved intact; PPT and Operating time conserved. Availability and OEE recover 100% to clean baseline. |
+
+---
+
+## 17. Empirical Validation Rule Triggers & Timeline Structure
+
+### 17.1 Actual Rule Trigger Mappings from Empirical Findings
+Across both the Starter ($N = 10$ findings across 5 injected anomalies) and Full ($N = 100$ findings across 50 injected anomalies) datasets, the validation engine detects every anomaly with 100% precision and zero unlinked false positives. The specific multi-rule trigger mappings for temporal and state rules are:
+
+1. **`VAL-STATE-001` (Illegal State Transition Lifecycle)**:
+   - *Triggered By*: **EC-05 (`BREAKDOWN_OVERLAPS_BREAK`)** (10 findings in full, 1 in starter).
+   - *Mechanism*: Injecting an `UNPLANNED_DOWNTIME` breakdown directly overlapping a scheduled lunch break forces an illegal backward lifecycle transition between `PLANNED_DOWNTIME` and `UNPLANNED_DOWNTIME`.
+2. **`VAL-TIME-002` (State Temporal Mutual Exclusivity)**:
+   - *Triggered By*: **Both EC-01 (`OVERLAPPING_STATE`)** (10 findings in full, 1 in starter) and **EC-05 (`BREAKDOWN_OVERLAPS_BREAK`)** (10 findings in full, 1 in starter).
+   - *Mechanism*: Evaluates bidirectional state interval collisions. Any time interval collision on the same machine triggers this rule.
+3. **`VAL-TIME-003` (Breakdown Overlaps Scheduled Break)**:
+   - *Triggered By*: **EC-05 (`BREAKDOWN_OVERLAPS_BREAK`)** (10 findings in full, 1 in starter).
+   - *Mechanism*: Specifically tests collision intervals between `UNPLANNED_DOWNTIME` and `PLANNED_DOWNTIME` intervals, flagging the exact break collision.
+4. **`VAL-TIME-005` (Shift Duration Accounting / Conservation)**:
+   - *Triggered By*: **Both EC-01 (`OVERLAPPING_STATE`)** (10 findings in full, 1 in starter) and **EC-05 (`BREAKDOWN_OVERLAPS_BREAK`)** (10 findings in full, 1 in starter).
+   - *Mechanism*: Asserts that $\sum \text{duration\_sec} = \text{shift duration} = 28,800\text{s}$. Injected event duration overlaps inflate the raw event duration sum above 28,800s (sum = 29,700s in EC-01 due to 900s overlap; sum = 30,600s in EC-05 due to 1,800s overlap), triggering conservation violations prior to triage.
+
+### 17.2 Accurate EC-01 Shift Timeline Breakdown (Non-Monolithic Operating Cycles)
+In earlier working notes, a simplified hypothetical example described a single monolithic "28,800s RUNNING event". In the actual generated data, equipment operating cycles are realistically structured:
+- An 8-hour shift ($28,800\text{s}$) consists of structured operating work segments separated by $3,600\text{s}$ of scheduled breaks:
+  - Morning Active Operating Work ($5,400\text{s}$ to $7,200\text{s}$)
+  - Morning Break: $900\text{s}$ ($15\text{ min}$) `PLANNED_DOWNTIME`
+  - Pre-Lunch Operating Work ($7,200\text{s}$)
+  - Lunch Break: $1,800\text{s}$ ($30\text{ min}$) `PLANNED_DOWNTIME` (e.g. 18:00:00 to 18:30:00 UTC)
+  - Post-Lunch Operating Work ($5,400\text{s}$)
+  - Afternoon Break: $900\text{s}$ ($15\text{ min}$) `PLANNED_DOWNTIME`
+  - Concluding Operating Work
+- In the EC-01 injection (`OVERLAPPING_STATE`), the subsequent post-lunch `RUNNING` event (scheduled 18:30:00 to 20:00:00, duration $5,400\text{s}$) is injected with its start time shifted back by $15\text{ minutes}$ ($900\text{s}$) to 18:15:00 (duration $6,300\text{s}$), colliding with the preceding 18:00:00 to 18:30:00 lunch break by $900\text{s}$.
+- *Raw Pre-Triage Sum*: $\sum \text{durations} = 28,800\text{s} + 900\text{s} = 29,700\text{s}$ (triggers `VAL-TIME-002` and `VAL-TIME-005`).
+- *Triage Action*: Preceding lunch break is authoritative; subsequent event start is clipped forward to 18:30:00 (`s_dt = max(s_dt, prev_e_dt)`), restoring event duration to $5,400\text{s}$.
+- *Post-Triage Sum*: $\sum \text{durations} = 28,800\text{s}$. Operating time ($23,176\text{s}$) and PPT ($25,200\text{s}$) are perfectly conserved, enabling Availability ($0.9197$), Performance ($0.8300$), Quality ($1.0000$), and OEE ($0.7643$) to recover 100% bitwise to the clean baseline.
+
 
 
 

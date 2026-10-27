@@ -341,7 +341,7 @@ In compliance with YottaFlex AI submission guidelines:
   1. **Commit 1 (`f4fd7c3`) - EC-01 Authoritative Precedence Triage**:
      - Modified [aggregator.py](file:///c:/Users/Admin/Desktop/yota/src/yotta_oee/calculator/aggregator.py): Preceding operational event is authoritative; subsequent overlapping event start is clipped forward (`s_dt = max(s_dt, prev_event_end)`).
      - Documented design assumption in [docs/architecture_decisions.md](file:///c:/Users/Admin/Desktop/yota/docs/architecture_decisions.md#L400-L408).
-     - Clean baseline audit: All 10 EC-01 shifts recover 100% identically to clean baseline (Delta OEE = 0.00e+00, PPT = 25,200s, Operating Time = 23,755s, Shift Duration Sum = 28,800s).
+     - Clean baseline audit: All 10 EC-01 shifts recover 100% identically to clean baseline (Delta OEE = 0.00e+00, PPT = 25,200s, Shift Duration Sum = 28,800s; e.g. for SHIFT-2026-01-02-C / MCH-LINE-01-02, Operating Time = 23,176s and OEE = 0.7643 matches clean bitwise).
   2. **Commit 2 (`277ada9`) - Seeded Stratified Horizon Sampling**:
      - Partitioned 90-day timeline into 10 temporal strata (~9 days each).
      - Injected anomalies spread across Weeks 1 to 12 across 40 strictly distinct machine-shifts.
