@@ -308,7 +308,9 @@ def benchmark_command(input_dir: Path, findings: Path) -> None:
         findings_data = json.load(f)
     findings_list = findings_data.get("findings", [])
 
-    gt_file = input_dir / "ground_truth.json"
+    gt_file = input_dir / "ground_truth" / "ground_truth.json"
+    if not gt_file.exists():
+        gt_file = input_dir / "ground_truth.json"
     bench = GroundTruthBenchmark(gt_file)
     result = bench.evaluate(findings_list)
 

@@ -52,10 +52,17 @@ def run_audit(data_dir: Path) -> Dict[str, Any]:
     # ---------------------------------------------------------
     # 1. Clean-vs-Mutated & Ground Truth Isolation
     # ---------------------------------------------------------
-    gt_file = data_dir / "ground_truth.json"
-    assert gt_file.exists(), "ground_truth.json missing!"
+    gt_file = data_dir / "ground_truth" / "ground_truth.json"
+    if not gt_file.exists():
+        gt_file = data_dir / "ground_truth.json"
+    assert gt_file.exists(), f"ground_truth.json missing from {data_dir}!"
     with open(gt_file, "r", encoding="utf-8") as f:
         ground_truth = json.load(f)
+
+    # Also load ground_truth.csv into dfs if in subfolder
+    gt_csv = data_dir / "ground_truth" / "ground_truth.csv"
+    if gt_csv.exists() and "ground_truth.csv" not in dfs:
+        dfs["ground_truth.csv"] = pl.read_csv(gt_csv)
 
     results["metrics"]["ground_truth_count"] = len(ground_truth)
     gt_record_ids = {g["record_id"]: g["anomaly_type"] for g in ground_truth}

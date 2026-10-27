@@ -66,8 +66,8 @@ class TestDataGenerationEngineStarter:
             "state_events.csv",
             "production_counts.csv",
             "quality_inspections.csv",
-            "ground_truth.csv",
-            "ground_truth.json",
+            "ground_truth/ground_truth.csv",
+            "ground_truth/ground_truth.json",
             "manifest.json",
         ]
         for filename in expected_files:
@@ -88,14 +88,14 @@ class TestDataGenerationEngineStarter:
         assert counts["state_events.csv"] > 500  # realistic timeline size
         assert counts["production_counts.csv"] > 1000
         assert counts["quality_inspections.csv"] >= 9
-        assert counts["ground_truth.csv"] == 5  # exactly 5 edge cases for starter!
+        assert counts["ground_truth/ground_truth.csv"] == 5  # exactly 5 edge cases for starter!
 
     def test_ground_truth_anomalies_structure(self, tmp_path: Path):
         engine = DataGenerationEngine(profile="starter", seed=42, output_dir=tmp_path / "gt_test")
         result = engine.generate_and_export()
 
         import json
-        with open(result.output_dir / "ground_truth.json", encoding="utf-8") as f:
+        with open(result.output_dir / "ground_truth" / "ground_truth.json", encoding="utf-8") as f:
             gt_data = json.load(f)
 
         assert len(gt_data) == 5

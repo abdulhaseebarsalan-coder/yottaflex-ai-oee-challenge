@@ -46,6 +46,9 @@ class TestValidationEngineDetection:
         blind_dir = tmp_path / "blind_dataset"
         shutil.copytree(starter_dataset_path, blind_dir)
 
+        gt_dir = blind_dir / "ground_truth"
+        if gt_dir.exists():
+            shutil.rmtree(gt_dir)
         gt_json = blind_dir / "ground_truth.json"
         gt_csv = blind_dir / "ground_truth.csv"
         if gt_json.exists():
@@ -53,6 +56,7 @@ class TestValidationEngineDetection:
         if gt_csv.exists():
             gt_csv.unlink()
 
+        assert not gt_dir.exists()
         assert not gt_json.exists()
         assert not gt_csv.exists()
 
@@ -67,6 +71,37 @@ class TestValidationEngineDetection:
         assert ValidationRuleId.VAL_QUAL_001.value in detected_rule_ids
         assert ValidationRuleId.VAL_PERF_001.value in detected_rule_ids
         assert ValidationRuleId.VAL_TIME_003.value in detected_rule_ids
+
+    def test_validator_and_calculator_never_open_ground_truth_subfolder(self, starter_dataset_path: Path, tmp_path: Path):
+        """CRITICAL GOVERNANCE TEST: Confirm validator and calculator engines never open ground_truth subfolder."""
+        from yotta_oee.calculator.aggregator import OEECalculatorEngine
+
+        isolated_dir = tmp_path / "isolated_dataset"
+        shutil.copytree(starter_dataset_path, isolated_dir)
+
+        # Create deliberate traps in ground_truth subfolder that would crash if read
+        gt_dir = isolated_dir / "ground_truth"
+        gt_dir.mkdir(parents=True, exist_ok=True)
+        corrupt_csv = gt_dir / "corrupt_trap.csv"
+        corrupt_csv.write_bytes(b"\x00\xff\xfe\xfa\x00ILLEGAL_DATA_TRAP\x01\x02")
+
+        # 1. Validation engine must execute without reading or erroring on ground_truth files
+        engine = ValidationEngine()
+        loaded_val_data = engine._load_dataset(isolated_dir)
+        assert not any("ground_truth" in k.lower() for k in loaded_val_data.keys())
+        assert "corrupt_trap.csv" not in loaded_val_data
+
+        val_summary = engine.validate_directory(isolated_dir)
+        assert len(val_summary.findings) > 0  # Real anomalies detected
+
+        # 2. OEE Calculator engine must execute without reading or erroring on ground_truth files
+        calc_engine = OEECalculatorEngine(isolated_dir)
+        loaded_calc_data = calc_engine._load_data()
+        assert not any("ground_truth" in k.lower() for k in loaded_calc_data.keys())
+        assert "corrupt_trap.csv" not in loaded_calc_data
+
+        aggregates, meta = calc_engine.calculate_all(findings=val_summary.findings)
+        assert len(aggregates) > 0
 
 
 class TestIndividualValidationRules:

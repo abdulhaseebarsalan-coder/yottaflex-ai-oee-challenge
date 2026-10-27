@@ -127,7 +127,6 @@ class DataGenerationEngine:
             ("state_events.csv", [e.to_dict() for e in state_events]),
             ("production_counts.csv", [c.to_dict() for c in counts]),
             ("quality_inspections.csv", [i.to_dict() for i in inspections]),
-            ("ground_truth.csv", [g.to_dict() for g in ground_truth]),
         ]
 
         checksums = {}
@@ -137,11 +136,28 @@ class DataGenerationEngine:
             self._write_csv(filepath, records)
             checksums[filename] = self._compute_sha256(filepath)
 
-        # Also write ground_truth.json for rich object parsing
-        gt_json_path = self.output_dir / "ground_truth.json"
+        # Ground truth files written into dedicated ground_truth/ subfolder
+        # GOVERNANCE: Isolates ground truth from automated telemetry scanning
+        gt_dir = self.output_dir / "ground_truth"
+        gt_dir.mkdir(parents=True, exist_ok=True)
+
+        gt_csv_path = gt_dir / "ground_truth.csv"
+        self._write_csv(gt_csv_path, [g.to_dict() for g in ground_truth])
+        gt_json_path = gt_dir / "ground_truth.json"
         with open(gt_json_path, "w", encoding="utf-8") as f:
             json.dump([g.to_dict() for g in ground_truth], f, indent=2)
-        checksums["ground_truth.json"] = self._compute_sha256(gt_json_path)
+
+        row_counts["ground_truth/ground_truth.csv"] = len(ground_truth)
+        checksums["ground_truth/ground_truth.csv"] = self._compute_sha256(gt_csv_path)
+        checksums["ground_truth/ground_truth.json"] = self._compute_sha256(gt_json_path)
+
+        # Clean up legacy top-level ground truth files if they exist from older runs
+        legacy_csv = self.output_dir / "ground_truth.csv"
+        if legacy_csv.exists():
+            legacy_csv.unlink()
+        legacy_json = self.output_dir / "ground_truth.json"
+        if legacy_json.exists():
+            legacy_json.unlink()
 
         # Write execution timestamp to separate run_metadata.json (not used for reproducibility comparison)
         run_metadata = {

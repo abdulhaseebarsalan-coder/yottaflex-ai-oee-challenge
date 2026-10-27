@@ -22,7 +22,7 @@ class TestGroundTruthBenchmark:
         engine = ValidationEngine()
         summary = engine.validate_directory(starter_dataset_path)
 
-        gt_file = starter_dataset_path / "ground_truth.json"
+        gt_file = starter_dataset_path / "ground_truth" / "ground_truth.json"
         benchmark = GroundTruthBenchmark(gt_file)
 
         # Convert findings to dicts for evaluation
@@ -41,7 +41,7 @@ class TestGroundTruthBenchmark:
         engine = ValidationEngine()
         summary = engine.validate_directory(starter_dataset_path)
 
-        gt_file = starter_dataset_path / "ground_truth.json"
+        gt_file = starter_dataset_path / "ground_truth" / "ground_truth.json"
         benchmark = GroundTruthBenchmark(gt_file)
         result = benchmark.evaluate([f.to_dict() for f in summary.findings])
 

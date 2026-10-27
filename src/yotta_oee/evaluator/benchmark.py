@@ -67,6 +67,18 @@ class GroundTruthBenchmark:
     """
 
     def __init__(self, ground_truth_file: Path) -> None:
+        if ground_truth_file.is_dir():
+            candidate = ground_truth_file / "ground_truth" / "ground_truth.json"
+            if candidate.exists():
+                ground_truth_file = candidate
+            else:
+                ground_truth_file = ground_truth_file / "ground_truth.json"
+        elif not ground_truth_file.exists():
+            # Check if file resides in ground_truth subfolder of same directory
+            candidate = ground_truth_file.parent / "ground_truth" / ground_truth_file.name
+            if candidate.exists():
+                ground_truth_file = candidate
+
         self.ground_truth_file = ground_truth_file
         self.ground_truth = self._load_ground_truth()
 
