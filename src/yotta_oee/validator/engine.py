@@ -70,7 +70,7 @@ class ValidationEngine:
         self,
         data_dir: Path,
         output_report: Optional[Path] = None,
-
+        run_timestamp: Optional[str] = None,
     ) -> ValidationSummary:
         """Load dataset from directory (ignoring ground truth) and run all validation rules."""
         dataset = self._load_dataset(data_dir)
@@ -98,8 +98,11 @@ class ValidationEngine:
                     findings_by_severity[f.severity.value] += 1
                 all_findings.extend(rule_findings)
 
+        # Sort findings canonically for bitwise deterministic output across separate runs
+        all_findings.sort(key=lambda f: (f.rule_id.value, f.table_name, f.record_id, f.message))
+
         summary = ValidationSummary(
-            run_timestamp=datetime.now(timezone.utc).isoformat(),
+            run_timestamp=run_timestamp or "2026-10-22T00:00:00Z",
             total_rules_evaluated=len(self.rules),
             passed_rules=passed_rules,
             failed_rules=failed_rules,

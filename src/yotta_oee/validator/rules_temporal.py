@@ -74,7 +74,7 @@ class StateMutualExclusivityRule(BaseValidationRule):
             return findings
 
         events_df = dataset["state_events.csv"].sort(["machine_id", "start_time", "event_id"])
-        machines = events_df["machine_id"].unique().to_list()
+        machines = sorted(events_df["machine_id"].unique().to_list())
 
         for machine in machines:
             m_events = events_df.filter(pl.col("machine_id") == machine).sort("start_time")

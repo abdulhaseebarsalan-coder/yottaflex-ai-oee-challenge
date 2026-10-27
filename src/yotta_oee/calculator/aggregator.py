@@ -77,25 +77,34 @@ class OEECalculatorEngine:
         excluded_qc: Set[str] = set()
         findings_by_ms: Dict[Tuple[str, str], List[RuleFinding]] = {}
 
-        if findings:
-            # Pre-index source tables for record-to-(machine, shift) routing
-            evt_ms = {
-                r["event_id"]: (r["machine_id"], r["shift_id"])
-                for r in events_df.iter_rows(named=True)
-            }
-            cnt_ms = {
-                r["count_id"]: (r["machine_id"], r["shift_id"])
-                for r in counts_df.iter_rows(named=True)
-            }
-            qc_ms = {
-                r["inspection_id"]: (r["machine_id"], r["shift_id"])
-                for r in qc_df.iter_rows(named=True)
-            }
+        # Pre-group records by (shift_id, machine_id) in a single pass for high-performance iteration
+        events_by_ms: Dict[Tuple[str, str], List[Dict[str, Any]]] = {}
+        evt_ms: Dict[str, Tuple[str, str]] = {}
+        for r in events_df.iter_rows(named=True):
+            ms = (r["shift_id"], r["machine_id"])
+            events_by_ms.setdefault(ms, []).append(r)
+            if findings:
+                evt_ms[r["event_id"]] = (r["machine_id"], r["shift_id"])
 
-            order_ms_map: Dict[str, Set[Tuple[str, str]]] = {}
-            for r in counts_df.iter_rows(named=True):
+        counts_by_ms: Dict[Tuple[str, str], List[Dict[str, Any]]] = {}
+        cnt_ms: Dict[str, Tuple[str, str]] = {}
+        order_ms_map: Dict[str, Set[Tuple[str, str]]] = {}
+        for r in counts_df.iter_rows(named=True):
+            ms = (r["shift_id"], r["machine_id"])
+            counts_by_ms.setdefault(ms, []).append(r)
+            if findings:
+                cnt_ms[r["count_id"]] = (r["machine_id"], r["shift_id"])
                 order_ms_map.setdefault(r["order_id"], set()).add((r["machine_id"], r["shift_id"]))
 
+        qc_by_ms: Dict[Tuple[str, str], List[Dict[str, Any]]] = {}
+        qc_ms: Dict[str, Tuple[str, str]] = {}
+        for r in qc_df.iter_rows(named=True):
+            ms = (r["shift_id"], r["machine_id"])
+            qc_by_ms.setdefault(ms, []).append(r)
+            if findings:
+                qc_ms[r["inspection_id"]] = (r["machine_id"], r["shift_id"])
+
+        if findings:
             for f in findings:
                 # Documented Decision Policy: EXCLUDE invalid records identified by validation
                 if f.rule_id.value in ("VAL-TIME-001", "VAL-REL-004") and f.table_name.startswith("state_events"):
@@ -129,6 +138,7 @@ class OEECalculatorEngine:
 
         # Iterate over all (Shift, Machine) pairs
         shift_rows = list(shifts_df.iter_rows(named=True))
+        machine_rows = list(machines_df.iter_rows(named=True))
 
         for shift in shift_rows:
             shift_id = shift["shift_id"]
@@ -136,19 +146,17 @@ class OEECalculatorEngine:
             end_dt = datetime.fromisoformat(shift["end_time"].replace("Z", "+00:00"))
             shift_duration_sec = int((end_dt - start_dt).total_seconds())
 
-            for machine in machines_df.iter_rows(named=True):
+            for machine in machine_rows:
                 machine_id = machine["machine_id"]
                 line_id = machine_line.get(machine_id, "LINE-01")
                 ms_key = (machine_id, shift_id)
 
                 # 1. State Event Durations (Decision EC-01 & EC-05)
-                m_events = events_df.filter(
-                    (pl.col("shift_id") == shift_id) & (pl.col("machine_id") == machine_id)
-                )
+                m_events_raw = events_by_ms.get((shift_id, machine_id), [])
 
                 # Sort chronologically by start_time, prioritizing planned downtime when start times coincide
                 m_ev_list = sorted(
-                    list(m_events.iter_rows(named=True)),
+                    m_events_raw,
                     key=lambda e: (e["start_time"], 0 if e["state"] == MachineState.PLANNED_DOWNTIME.value else 1),
                 )
 
@@ -165,8 +173,9 @@ class OEECalculatorEngine:
                 running_sec = 0
                 planned_dt_sec = 0
                 unplanned_dt_sec = 0
+                prev_event_end: Optional[datetime] = None
 
-                for i, ev in enumerate(m_ev_list):
+                for ev in m_ev_list:
                     if ev["event_id"] in excluded_events:
                         continue  # EXCLUDE decision applied
 
@@ -174,15 +183,12 @@ class OEECalculatorEngine:
                     s_dt = datetime.fromisoformat(ev["start_time"].replace("Z", "+00:00"))
                     e_dt = datetime.fromisoformat(ev["end_time"].replace("Z", "+00:00"))
 
-                    # Decision EC-01: Truncate the earlier event at next start if overlapping
-                    # Applies when an earlier event (s_dt < next_s_dt) overlaps into the next event (e_dt > next_s_dt).
-                    # Planned break events must not be truncated by overlapping breakdowns (handled via EC-05 clipping).
-                    if i < len(m_ev_list) - 1:
-                        next_ev = m_ev_list[i + 1]
-                        next_s_dt = datetime.fromisoformat(next_ev["start_time"].replace("Z", "+00:00"))
-                        if s_dt < next_s_dt and e_dt > next_s_dt:
-                            if not (st == MachineState.PLANNED_DOWNTIME.value and next_ev["state"] == MachineState.UNPLANNED_DOWNTIME.value):
-                                e_dt = next_s_dt
+                    # Decision EC-01: Clip later event's start to previous event's end (earlier event is authoritative)
+                    # When a subsequent event overlaps into a preceding event, the earlier event takes precedence.
+                    # The subsequent event start is clipped forward to the prior end timestamp (s_dt = max(s_dt, prev_event_end)),
+                    # so operating time, planned break duration, and OEE recover identically to the clean baseline.
+                    if prev_event_end is not None and s_dt < prev_event_end:
+                        s_dt = prev_event_end
 
                     dur = max(0, int((e_dt - s_dt).total_seconds()))
 
@@ -195,6 +201,9 @@ class OEECalculatorEngine:
                             if o_e > o_s:
                                 overlap_sec += int((o_e - o_s).total_seconds())
                         dur = max(0, dur - overlap_sec)
+
+                    if e_dt > (prev_event_end or datetime.min.replace(tzinfo=timezone.utc)):
+                        prev_event_end = e_dt
 
                     if st == MachineState.RUNNING.value:
                         running_sec += dur
@@ -213,11 +222,9 @@ class OEECalculatorEngine:
                 operating_time_sec = int(calculate_operating_time(running_sec))
 
                 # 2. Production Counts: total_count = sum of count_delta, never final cumulative (Decision EC-02)
-                m_counts = counts_df.filter(
-                    (pl.col("shift_id") == shift_id) & (pl.col("machine_id") == machine_id)
-                )
+                m_counts_raw = counts_by_ms.get((shift_id, machine_id), [])
                 valid_counts = [
-                    r for r in m_counts.iter_rows(named=True)
+                    r for r in m_counts_raw
                     if r["count_id"] not in excluded_counts and (r["count_delta"] >= 0 or r["is_correction"])
                 ]
                 total_count = sum(int(r["count_delta"]) for r in valid_counts)
@@ -225,11 +232,9 @@ class OEECalculatorEngine:
                     total_count = 0
 
                 # 3. Quality Inspections: Exclude invalid inspection from Q and flag it (not Q=0) (Decision EC-03)
-                m_qc = qc_df.filter(
-                    (pl.col("shift_id") == shift_id) & (pl.col("machine_id") == machine_id)
-                )
+                m_qc_raw = qc_by_ms.get((shift_id, machine_id), [])
                 valid_qc = [
-                    r for r in m_qc.iter_rows(named=True)
+                    r for r in m_qc_raw
                     if r["inspection_id"] not in excluded_qc
                     and r["scrap_qty"] <= r["inspected_qty"]
                     and (r["passed_qty"] + r["scrap_qty"] + r["rework_qty"] == r["inspected_qty"])

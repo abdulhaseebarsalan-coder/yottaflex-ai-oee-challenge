@@ -25,7 +25,7 @@ class CountProgressionRule(BaseValidationRule):
             return findings
 
         counts_df = dataset["production_counts.csv"].sort(["order_id", "machine_id", "timestamp"])
-        orders_machines = counts_df.select(["order_id", "machine_id"]).unique().rows()
+        orders_machines = sorted(counts_df.select(["order_id", "machine_id"]).unique().rows())
 
         for o_id, m_id in orders_machines:
             om_counts = counts_df.filter(
@@ -453,7 +453,7 @@ class StateTransitionLifecycleRule(BaseValidationRule):
             return findings
 
         events_df = dataset["state_events.csv"].sort(["machine_id", "start_time", "event_id"])
-        machines = events_df["machine_id"].unique().to_list()
+        machines = sorted(events_df["machine_id"].unique().to_list())
 
         for machine in machines:
             m_events = events_df.filter(pl.col("machine_id") == machine).sort("start_time")

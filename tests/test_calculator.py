@@ -142,16 +142,18 @@ class TestOEECalculatorEngine:
                 assert mut_agg.exception_count > 0
 
                 if key == ("SHIFT-2026-01-01-A", "MCH-LINE-01-01"):
-                    # EC-01: Documented truncation delta of 900s
-                    assert clean_agg.operating_time_sec - mut_agg.operating_time_sec == 900
-                    assert (
-                        (mut_agg.unplanned_downtime_sec - clean_agg.unplanned_downtime_sec == 900)
-                        or (mut_agg.planned_downtime_sec - clean_agg.planned_downtime_sec == 900)
-                    )
+                    # EC-01: Later event start clipped to prior end -> operating time, PPT, and OEE recover 100% to clean
+                    assert mut_agg.operating_time_sec == clean_agg.operating_time_sec
+                    assert mut_agg.planned_prod_time_sec == clean_agg.planned_prod_time_sec
+                    assert mut_agg.availability == clean_agg.availability
+                    assert mut_agg.performance == clean_agg.performance
+                    assert mut_agg.quality == clean_agg.quality
+                    assert mut_agg.oee == clean_agg.oee
                     assert (
                         mut_agg.operating_time_sec + mut_agg.planned_downtime_sec + mut_agg.unplanned_downtime_sec
                         == 28800
                     )
+                    assert mut_agg.status == AggregateStatus.ANOMALOUS
                 elif key == ("SHIFT-2026-01-01-A", "MCH-LINE-01-02"):
                     # EC-02: Documented total_count from sum of valid count_delta (omits single corrupted pulse)
                     assert 0 < clean_agg.total_count - mut_agg.total_count <= 50
