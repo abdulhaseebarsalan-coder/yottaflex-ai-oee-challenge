@@ -10,7 +10,7 @@ Injected Edge Cases:
 
 from datetime import datetime, timedelta
 import random
-from typing import List, Tuple
+from typing import Callable, Dict, List, Optional, Set, Tuple
 
 from yotta_oee.domain import (
     AnomalyType,
@@ -87,6 +87,95 @@ class AnomalyInjector:
         self.anomaly_counter += 1
         return anom_id
 
+    def _stratified_sample(
+        self,
+        candidates: List[Any],
+        count: int,
+        get_time_fn: Callable[[Any], datetime],
+        get_ms_fn: Optional[Callable[[Any], Tuple[str, str]]] = None,
+        used_ms: Optional[Set[Tuple[str, str]]] = None,
+        get_order_fn: Optional[Callable[[Any], str]] = None,
+        used_orders: Optional[Set[str]] = None,
+    ) -> List[Any]:
+        """Deterministically sample candidates partitioned into count temporal strata."""
+        if not candidates or count <= 0:
+            return []
+
+        # Filter by used_ms and used_orders if provided
+        eligible = [
+            c for c in candidates
+            if (get_ms_fn is None or used_ms is None or get_ms_fn(c) not in used_ms)
+            and (get_order_fn is None or used_orders is None or get_order_fn(c) not in used_orders)
+        ]
+
+        if not eligible:
+            return []
+
+        if count == 1:
+            chosen = self.rng.choice(eligible)
+            if used_ms is not None and get_ms_fn is not None:
+                used_ms.add(get_ms_fn(chosen))
+            if used_orders is not None and get_order_fn is not None:
+                used_orders.add(get_order_fn(chosen))
+            return [chosen]
+
+        eligible.sort(key=get_time_fn)
+        t_min = get_time_fn(eligible[0])
+        t_max = get_time_fn(eligible[-1])
+        total_span = (t_max - t_min).total_seconds()
+
+        if total_span <= 0:
+            sample_size = min(count, len(eligible))
+            chosen_list = self.rng.sample(eligible, sample_size)
+            for c in chosen_list:
+                if used_ms is not None and get_ms_fn is not None:
+                    used_ms.add(get_ms_fn(c))
+                if used_orders is not None and get_order_fn is not None:
+                    used_orders.add(get_order_fn(c))
+            return chosen_list
+
+        stratum_sec = total_span / count
+        selected: List[Any] = []
+
+        for k in range(count):
+            start_t = t_min + timedelta(seconds=k * stratum_sec)
+            end_t = t_min + timedelta(seconds=(k + 1) * stratum_sec)
+
+            # Find candidates in stratum k that are still eligible
+            stratum_cands = [
+                c for c in eligible
+                if (start_t <= get_time_fn(c) < end_t or (k == count - 1 and get_time_fn(c) <= end_t))
+                and (get_ms_fn is None or used_ms is None or get_ms_fn(c) not in used_ms)
+                and (get_order_fn is None or used_orders is None or get_order_fn(c) not in used_orders)
+            ]
+
+            if stratum_cands:
+                pick = self.rng.choice(stratum_cands)
+                selected.append(pick)
+                if used_ms is not None and get_ms_fn is not None:
+                    used_ms.add(get_ms_fn(pick))
+                if used_orders is not None and get_order_fn is not None:
+                    used_orders.add(get_order_fn(pick))
+            else:
+                # Fallback: pick closest available from remaining eligible pool
+                remaining = [
+                    c for c in eligible
+                    if (get_ms_fn is None or used_ms is None or get_ms_fn(c) not in used_ms)
+                    and (get_order_fn is None or used_orders is None or get_order_fn(c) not in used_orders)
+                    and c not in selected
+                ]
+                if remaining:
+                    midpoint = start_t + timedelta(seconds=stratum_sec / 2)
+                    remaining.sort(key=lambda c: abs((get_time_fn(c) - midpoint).total_seconds()))
+                    pick = remaining[0]
+                    selected.append(pick)
+                    if used_ms is not None and get_ms_fn is not None:
+                        used_ms.add(get_ms_fn(pick))
+                    if used_orders is not None and get_order_fn is not None:
+                        used_orders.add(get_order_fn(pick))
+
+        return selected
+
     def _inject_overlapping_states(
         self, state_events: List[StateEvent], count: int, used_ms: set[Tuple[str, str]]
     ) -> Tuple[List[StateEvent], List[GroundTruthAnomaly]]:
@@ -94,23 +183,23 @@ class AnomalyInjector:
         ground_truth = []
         events_copy = list(state_events)
 
-        # Find eligible consecutive pairs on the same machine and distinct machine-shift
-        selected = []
+        # Collect eligible consecutive pairs on the same machine and shift with duration >= 1200
+        eligible_pairs = []
         for i in range(len(events_copy) - 1):
             e1 = events_copy[i]
             e2 = events_copy[i + 1]
-            if e1.machine_id == e2.machine_id and e1.shift_id == e2.shift_id:
-                ms_key = (e1.machine_id, e1.shift_id)
-                if ms_key not in used_ms and e1.duration_sec >= 1200:
-                    selected.append(i)
-                    used_ms.add(ms_key)
-                    if len(selected) >= count:
-                        break
+            if e1.machine_id == e2.machine_id and e1.shift_id == e2.shift_id and e1.duration_sec >= 1200:
+                eligible_pairs.append((i, e1, e2))
 
-        for idx in selected:
-            e_prior = events_copy[idx]
-            e_next = events_copy[idx + 1]
+        selected_pairs = self._stratified_sample(
+            candidates=eligible_pairs,
+            count=count,
+            get_time_fn=lambda pair: pair[1].start_time,
+            get_ms_fn=lambda pair: (pair[1].machine_id, pair[1].shift_id),
+            used_ms=used_ms,
+        )
 
+        for idx, e_prior, e_next in selected_pairs:
             # Shift next start_time 15 minutes before prior end_time
             overlap_delta = timedelta(minutes=15)
             new_start = e_prior.end_time - overlap_delta
@@ -152,17 +241,26 @@ class AnomalyInjector:
         ground_truth = []
         counts_copy = list(counts)
 
-        selected = []
+        eligible_counts = []
         for i, c in enumerate(counts_copy):
             if i > 5 and c.cumulative_count > 200 and not c.is_correction:
-                ms_key = (c.machine_id, c.shift_id)
-                if ms_key not in used_ms:
-                    selected.append(i)
-                    used_ms.add(ms_key)
-                    if len(selected) >= count:
-                        break
-        for idx in selected:
-            c_curr = counts_copy[idx]
+                eligible_counts.append((i, c))
+
+        used_orders: Set[str] = set()
+        selected_counts = self._stratified_sample(
+            candidates=eligible_counts,
+            count=count,
+            get_time_fn=lambda item: item[1].timestamp,
+            get_ms_fn=lambda item: (item[1].machine_id, item[1].shift_id),
+            used_ms=used_ms,
+            get_order_fn=lambda item: item[1].order_id,
+            used_orders=used_orders,
+        )
+
+        # Sort selected by index in ascending order
+        selected_counts.sort(key=lambda item: item[0])
+
+        for idx, c_curr in selected_counts:
             c_prev = counts_copy[idx - 1]
 
             # Drop cumulative count by 120 units
@@ -225,17 +323,20 @@ class AnomalyInjector:
         ground_truth = []
         inspections_copy = list(inspections)
 
-        selected = []
-        for i, qc in enumerate(inspections_copy):
-            ms_key = (qc.machine_id, qc.shift_id)
-            if ms_key not in used_ms:
-                selected.append(i)
-                used_ms.add(ms_key)
-                if len(selected) >= count:
-                    break
+        eligible_qc = [
+            (i, qc) for i, qc in enumerate(inspections_copy)
+            if qc.inspected_qty >= 10
+        ]
 
-        for idx in selected:
-            qc = inspections_copy[idx]
+        selected_qc = self._stratified_sample(
+            candidates=eligible_qc,
+            count=count,
+            get_time_fn=lambda item: item[1].timestamp,
+            get_ms_fn=lambda item: (item[1].machine_id, item[1].shift_id),
+            used_ms=used_ms,
+        )
+
+        for idx, qc in selected_qc:
             orig_scrap = qc.scrap_qty
             injected_scrap = qc.inspected_qty + 15  # Impossible scrap count
 
@@ -273,15 +374,42 @@ class AnomalyInjector:
     def _inject_invalid_cycle_times(
         self, orders: List[ProductionOrder], count: int
     ) -> Tuple[List[ProductionOrder], List[GroundTruthAnomaly]]:
-        """EC-04: Inject an erroneous planned cycle time on production order (e.g. 0.35s)."""
+        """EC-04: Inject an erroneous planned cycle time on production order (e.g. 0.35s) across horizon."""
         ground_truth = []
         orders_copy = list(orders)
 
-        eligible_indices = list(range(len(orders_copy)))
-        selected = eligible_indices[:count]
+        if count == 1:
+            selected_orders = [self.rng.choice(list(enumerate(orders_copy)))]
+        else:
+            orders_sorted = sorted(list(enumerate(orders_copy)), key=lambda item: item[1].scheduled_start)
+            t_min = orders_sorted[0][1].scheduled_start
+            t_max = orders_sorted[-1][1].scheduled_start
+            total_sec = (t_max - t_min).total_seconds()
+            stratum_sec = total_sec / count
+            selected_orders = []
 
-        for idx in selected:
-            order = orders_copy[idx]
+            for k in range(count):
+                start_t = t_min + timedelta(seconds=k * stratum_sec)
+                end_t = t_min + timedelta(seconds=(k + 1) * stratum_sec)
+                target_line = f"LINE-{(k % 5) + 1:02d}"
+
+                # Prefer orders from target_line in this stratum
+                stratum_cands = [
+                    item for item in orders_sorted
+                    if (start_t <= item[1].scheduled_start < end_t or (k == count - 1 and item[1].scheduled_start <= end_t))
+                    and item[1].line_id == target_line
+                ]
+                if not stratum_cands:
+                    stratum_cands = [
+                        item for item in orders_sorted
+                        if (start_t <= item[1].scheduled_start < end_t or (k == count - 1 and item[1].scheduled_start <= end_t))
+                    ]
+                if stratum_cands:
+                    selected_orders.append(self.rng.choice(stratum_cands))
+                else:
+                    selected_orders.append(orders_sorted[k * (len(orders_sorted) // count)])
+
+        for idx, order in selected_orders:
             orig_pct = order.planned_cycle_time_sec
             # Set to 0.35s (yielding massive discrepancy against master engineering standard)
             injected_pct = 0.350
@@ -331,15 +459,15 @@ class AnomalyInjector:
             if e.state == MachineState.PLANNED_DOWNTIME and e.duration_sec == 1800
         ]
 
-        selected = []
-        for i, e in lunch_events:
-            ms_key = (e.machine_id, e.shift_id)
-            if ms_key not in used_ms:
-                selected.append((i, e))
-                used_ms.add(ms_key)
-                if len(selected) >= count:
-                    break
-        for idx, break_evt in selected:
+        selected_lunch = self._stratified_sample(
+            candidates=lunch_events,
+            count=count,
+            get_time_fn=lambda item: item[1].start_time,
+            get_ms_fn=lambda item: (item[1].machine_id, item[1].shift_id),
+            used_ms=used_ms,
+        )
+
+        for idx, break_evt in selected_lunch:
             # Overlapping breakdown: coincides with the planned lunch break window
             colliding_start = break_evt.start_time
             colliding_end = break_evt.end_time
