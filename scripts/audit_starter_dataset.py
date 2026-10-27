@@ -24,7 +24,10 @@ import polars as pl
 from rich.console import Console
 from rich.table import Table
 
+from yotta_oee.domain import DefectCode
+
 console = Console(safe_box=True)
+
 
 
 def load_dataset(data_dir: Path) -> Dict[str, pl.DataFrame]:
@@ -167,11 +170,13 @@ def run_audit(data_dir: Path) -> Dict[str, Any]:
     qc_defects = dfs["quality_inspections.csv"].filter(
         pl.col("defect_code").is_not_null() & (pl.col("defect_code") != "")
     )
+    valid_defect_codes = {e.value for e in DefectCode}
     orphan_counts["qc.defect_code"] = len(
-        qc_defects.filter(~pl.col("defect_code").is_in(reasons_pks))
+        qc_defects.filter(~pl.col("defect_code").is_in(valid_defect_codes))
     )
 
     results["metrics"]["orphan_counts"] = orphan_counts
+
 
     # ---------------------------------------------------------
     # 3. ID Integrity & Uniqueness
@@ -349,18 +354,39 @@ def run_audit(data_dir: Path) -> Dict[str, Any]:
             results["findings"].append(f"Unintentional scrap overflow on {so['inspection_id']}")
 
     # ---------------------------------------------------------
-    # 7. Standards & Ideal Cycle Times
+    # 7. Standards & Ideal Cycle Times (EC-04 verification)
     # ---------------------------------------------------------
     std_df = dfs["machine_product_standards.csv"]
-    invalid_standards = std_df.filter(
+    orders_df = dfs["production_orders.csv"]
+
+    # Master standards must remain completely intact as authoritative reference
+    unphysical_standards = std_df.filter(
         (pl.col("ideal_cycle_time_sec") < 1.0) | (pl.col("ideal_cycle_time_sec") > 60.0)
     ).to_dicts()
-    results["metrics"]["anomalous_standards_count"] = len(invalid_standards)
-    results["metrics"]["anomalous_standards"] = invalid_standards
+    if unphysical_standards:
+        results["findings"].append(f"Master standards corrupted: {unphysical_standards}")
 
-    for inv in invalid_standards:
-        if inv["standard_id"] not in gt_record_ids:
-            results["findings"].append(f"Unintentional anomalous standard on {inv['standard_id']}")
+    # Check order planned_cycle_time_sec against master standard (EC-04)
+    std_map = {
+        (r["machine_id"], r["product_id"]): float(r["ideal_cycle_time_sec"])
+        for r in std_df.iter_rows(named=True)
+    }
+
+    invalid_orders = []
+    for o in orders_df.iter_rows(named=True):
+        lead_mch = f"MCH-{o['line_id']}-01"
+        master_ict = std_map.get((lead_mch, o["product_id"]))
+        planned_ict = float(o.get("planned_cycle_time_sec", 0.0))
+        if master_ict is not None and abs(planned_ict - master_ict) > 0.001:
+            invalid_orders.append(o)
+
+    results["metrics"]["anomalous_standards_count"] = len(invalid_orders)
+    results["metrics"]["anomalous_standards"] = invalid_orders
+
+    for inv in invalid_orders:
+        if inv["order_id"] not in gt_record_ids:
+            results["findings"].append(f"Unintentional cycle time discrepancy on order {inv['order_id']}")
+
 
     # ---------------------------------------------------------
     # 8. Manufacturing Realism & Operational Distributions

@@ -5,7 +5,9 @@ import pytest
 from pydantic import ValidationError
 
 from yotta_oee.domain import (
+    AggregateStatus,
     AnomalyType,
+    DefectCode,
     DowntimeCategory,
     DowntimeReason,
     GroundTruthAnomaly,
@@ -29,6 +31,7 @@ from yotta_oee.domain import (
     ValidationFinding,
     ValidationRuleId,
 )
+
 
 
 class TestMasterDataModels:
@@ -148,11 +151,12 @@ class TestTransactionalModels:
             passed_qty=47,
             scrap_qty=2,
             rework_qty=1,
-            defect_code="DT-DEF-TOOL-WEAR",
+            defect_code=DefectCode.TOOL_MARKING,
         )
         d = qc.to_dict()
         assert d["inspected_qty"] == 50
         assert d["passed_qty"] == 47
+        assert d["defect_code"] == "TOOL_MARKING"
 
 
 class TestOutputAndGroundTruthModels:
@@ -175,9 +179,14 @@ class TestOutputAndGroundTruthModels:
             performance=0.9524,
             quality=0.9800,
             oee=0.7933,
+            status=AggregateStatus.CLEAN,
+            exception_count=0,
         )
         d = agg.to_dict()
         assert d["oee"] == 0.7933
+        assert d["status"] == "CLEAN"
+        assert d["exception_count"] == 0
+
         assert d["availability"] == 0.8500
 
     def test_ground_truth_anomaly_model(self):

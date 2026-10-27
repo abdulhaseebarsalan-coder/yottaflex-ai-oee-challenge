@@ -16,10 +16,10 @@ class RuleFinding:
     severity: Severity
     table_name: str
     record_id: str
-    field_name: str
-    message: str
-    observed_value: Any
-    expected_condition: str
+    field_name: Optional[str] = None
+    message: str = ""
+    observed_value: Any = ""
+    expected_condition: str = ""
     details: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:

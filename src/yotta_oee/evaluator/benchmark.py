@@ -78,45 +78,54 @@ class GroundTruthBenchmark:
             return json.load(f)
 
     def evaluate(self, findings: List[Dict[str, Any]]) -> BenchmarkResult:
-        """Compare detected validator findings against ground truth anomalies."""
+        """Compare detected validator findings against ground truth anomalies at the record level.
+        
+        Under record-level matching, any finding targeting an anomalous record is attributed
+        as a detection for that anomaly. Multiple rules firing on the same anomalous record
+        (e.g. scrap overflow and mass-balance, or state overlap and time accounting) are
+        treated as companion detections, not false positives.
+        """
         evaluations: List[AnomalyDetectionEvaluation] = []
+
+        # Build lookup of all ground truth anomalous target records: (table, record_id) -> list of GT anomalies
+        gt_by_record: Dict[Tuple[str, str], List[Dict[str, Any]]] = {}
+        for gt in self.ground_truth:
+            tbl = gt["table_name"].replace(".csv", "")
+            rec_id = str(gt["record_id"])
+            gt_by_record.setdefault((tbl, rec_id), []).append(gt)
+
+            rel_rec = gt.get("related_record_id")
+            if rel_rec and str(rel_rec).strip():
+                gt_by_record.setdefault((tbl, str(rel_rec)), []).append(gt)
+
+        # Map findings to matching ground truth anomalies
+        detected_anom_ids: Set[str] = set()
+        findings_by_anom_id: Dict[str, List[str]] = {gt["anomaly_id"]: [] for gt in self.ground_truth}
         matched_finding_indices: Set[int] = set()
+
+        for idx, finding in enumerate(findings):
+            f_tbl = str(finding.get("table_name", "")).replace(".csv", "")
+            f_rec = str(finding.get("record_id", ""))
+            f_key = (f_tbl, f_rec)
+
+            if f_key in gt_by_record:
+                matched_finding_indices.add(idx)
+                for matched_gt in gt_by_record[f_key]:
+                    anom_id = matched_gt["anomaly_id"]
+                    detected_anom_ids.add(anom_id)
+                    findings_by_anom_id[anom_id].append(
+                        f"[{finding.get('rule_id')}] {finding.get('message', '')}"
+                    )
 
         tp = 0
         fn = 0
-
-        # Group detections by anomaly type
         detection_by_type: Dict[str, Dict[str, Any]] = {}
 
         for gt in self.ground_truth:
             anom_id = gt["anomaly_id"]
             anom_type = gt["anomaly_type"]
-            tbl = gt["table_name"]
-            rec_id = gt["record_id"]
-            rel_rec_id = gt.get("related_record_id", "")
-            exp_rule = gt["detection_rule_id"]
-
-            matching_msgs = []
-            is_detected = False
-
-            for idx, finding in enumerate(findings):
-                f_tbl = finding.get("table_name", "").replace(".csv", "")
-                gt_tbl = tbl.replace(".csv", "")
-                f_rec = str(finding.get("record_id", ""))
-                f_rule = str(finding.get("rule_id", ""))
-
-                # Match condition:
-                # 1. Matching rule ID
-                # 2. Matching table name
-                # 3. Matching primary record_id OR related_record_id (for temporal overlaps)
-                rule_match = (f_rule == exp_rule)
-                table_match = (f_tbl == gt_tbl)
-                record_match = (f_rec == rec_id or (rel_rec_id and f_rec == rel_rec_id))
-
-                if rule_match and table_match and record_match:
-                    is_detected = True
-                    matching_msgs.append(finding.get("message", ""))
-                    matched_finding_indices.add(idx)
+            is_detected = anom_id in detected_anom_ids
+            matching_msgs = findings_by_anom_id.get(anom_id, [])
 
             if is_detected:
                 tp += 1
@@ -127,23 +136,22 @@ class GroundTruthBenchmark:
                 AnomalyDetectionEvaluation(
                     anomaly_id=anom_id,
                     anomaly_type=anom_type,
-                    target_table=tbl,
-                    target_record_id=rec_id,
-                    expected_rule_id=exp_rule,
+                    target_table=gt["table_name"],
+                    target_record_id=gt["record_id"],
+                    expected_rule_id=gt["detection_rule_id"],
                     detected=is_detected,
                     matching_findings_count=len(matching_msgs),
                     matching_finding_messages=matching_msgs,
                 )
             )
 
-            # Update anomaly type summary
             if anom_type not in detection_by_type:
                 detection_by_type[anom_type] = {"total": 0, "detected": 0}
             detection_by_type[anom_type]["total"] += 1
             if is_detected:
                 detection_by_type[anom_type]["detected"] += 1
 
-        # False positives: findings that did not match any ground truth anomaly
+        # False positives: findings targeting records that have no injected anomalies
         fp = len(findings) - len(matched_finding_indices)
 
         precision = tp / (tp + fp) if (tp + fp) > 0 else 1.0
@@ -161,3 +169,4 @@ class GroundTruthBenchmark:
             detection_by_type=detection_by_type,
             evaluations=evaluations,
         )
+

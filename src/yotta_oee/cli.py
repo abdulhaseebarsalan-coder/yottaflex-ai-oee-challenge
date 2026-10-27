@@ -9,11 +9,14 @@ from rich.panel import Panel
 from rich.table import Table
 
 from yotta_oee.calculator.aggregator import OEECalculatorEngine
+from yotta_oee.domain.enums import Severity, ValidationRuleId
 from yotta_oee.evaluator.benchmark import GroundTruthBenchmark
 from yotta_oee.generator.engine import DataGenerationEngine
+from yotta_oee.validator.base import RuleFinding
 from yotta_oee.validator.engine import ValidationEngine
 
 console = Console(safe_box=True)
+
 
 
 @click.group()
@@ -165,7 +168,15 @@ def validate_command(input_dir: Path, output_report: Path) -> None:
     default=None,
     help="Output CSV path for Shift x Machine OEE aggregates.",
 )
-def calculate_oee_command(input_dir: Path, output_csv: Optional[Path]) -> None:
+@click.option(
+    "--findings-report",
+    "-f",
+    type=click.Path(dir_okay=False, path_type=Path),
+    default=Path("reports/validation_findings.json"),
+    show_default=True,
+    help="Optional path to validation findings report to consume.",
+)
+def calculate_oee_command(input_dir: Path, output_csv: Optional[Path], findings_report: Optional[Path]) -> None:
     """Compute shift-level Availability, Performance, Quality, and OEE metrics."""
     console.print(
         Panel.fit(
@@ -175,11 +186,34 @@ def calculate_oee_command(input_dir: Path, output_csv: Optional[Path]) -> None:
         )
     )
 
+    loaded_findings = None
+    if findings_report and findings_report.exists():
+        try:
+            with open(findings_report, "r", encoding="utf-8") as f:
+                raw_summary = json.load(f)
+                loaded_findings = [
+                    RuleFinding(
+                        rule_id=ValidationRuleId(rf["rule_id"]),
+                        severity=Severity(rf["severity"]),
+                        table_name=rf["table_name"],
+                        record_id=rf["record_id"],
+                        message=rf.get("message", ""),
+                        field_name=rf.get("field_name"),
+                        observed_value=rf.get("observed_value", ""),
+                        expected_condition=rf.get("expected_condition", ""),
+                        details=rf.get("details", {}),
+                    )
+                    for rf in raw_summary.get("findings", [])
+                ]
+            console.print(f"[bold cyan]Consumed {len(loaded_findings)} validator findings for decision-policy application.[/bold cyan]")
+        except Exception as err:
+            console.print(f"[dim]Could not parse findings report: {err}[/dim]")
+
     target_csv = output_csv or (input_dir / "oee_aggregates.csv")
     engine = OEECalculatorEngine(input_dir)
 
     with console.status("[bold green]Calculating OEE metrics and verifying analytical equivalence...", spinner="dots"):
-        aggregates, summary_meta = engine.calculate_all(output_csv=target_csv)
+        aggregates, summary_meta = engine.calculate_all(output_csv=target_csv, findings=loaded_findings)
 
     console.print(f"[bold green][SUCCESS][/bold green] Computed [bold]{len(aggregates)}[/bold] OEE aggregates.\n")
 
@@ -193,8 +227,11 @@ def calculate_oee_command(input_dir: Path, output_csv: Optional[Path]) -> None:
     table.add_column("Performance", justify="right", style="green")
     table.add_column("Quality", justify="right", style="green")
     table.add_column("OEE", justify="right", style="bold cyan")
+    table.add_column("Status", justify="center")
+    table.add_column("Exceptions", justify="right")
 
     for agg in aggregates[:6]:
+        st_style = "green" if agg.status.value == "CLEAN" else ("red" if agg.status.value == "ANOMALOUS" else "yellow")
         table.add_row(
             agg.shift_id,
             agg.machine_id,
@@ -204,6 +241,8 @@ def calculate_oee_command(input_dir: Path, output_csv: Optional[Path]) -> None:
             f"{agg.performance:.2%}",
             f"{agg.quality:.2%}",
             f"{agg.oee:.2%}",
+            f"[{st_style}]{agg.status.value}[/{st_style}]",
+            str(agg.exception_count),
         )
 
     console.print(table)
@@ -216,7 +255,20 @@ def calculate_oee_command(input_dir: Path, output_csv: Optional[Path]) -> None:
         f"Failed: [bold red]{eq_info['failed_count']}[/bold red] | "
         f"Max Delta: [dim]{eq_info['max_delta']:.2e}[/dim]\n"
     )
+
+    if "quality_sampling" in summary_meta:
+        qs = summary_meta["quality_sampling"]
+        console.print(
+            f"Quality Sampling & Inspection Statistics:\n"
+            f"  Inspected Units: [bold]{qs['total_inspected_units']:,}[/bold] units across [bold]{qs['total_inspections']}[/bold] inspections "
+            f"(Coverage: [bold green]{qs['sampling_coverage_pct']}%[/bold green] of {qs['total_production_units']:,} total production units)\n"
+            f"  Sample Sizes per Shift-Machine: Mean=[bold]{qs['sample_size_stats']['mean_sample_units']}[/bold], "
+            f"Min=[bold]{qs['sample_size_stats']['min_sample_units']}[/bold], Max=[bold]{qs['sample_size_stats']['max_sample_units']}[/bold]\n"
+            f"  Rework Treatment: [cyan]{qs['rework_accounting']}[/cyan]\n"
+        )
+
     console.print(f"Aggregates exported to: [bold]{target_csv}[/bold]\n")
+
 
 
 # ---------------------------------------------------------------------------

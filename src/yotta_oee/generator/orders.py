@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import random
 from typing import Dict, List, Tuple
 
-from yotta_oee.domain import Line, OrderStatus, Product, ProductionOrder, Shift
+from yotta_oee.domain import Line, MachineProductStandard, OrderStatus, Product, ProductionOrder, Shift
 from yotta_oee.generator.config import GeneratorProfileConfig
 
 
@@ -20,11 +20,17 @@ class OrderGenerator:
         lines: List[Line],
         products: List[Product],
         shifts: List[Shift],
+        standards: Optional[List[MachineProductStandard]] = None,
     ) -> List[ProductionOrder]:
         """Generate contiguous sequence of production orders for each line."""
         orders: List[ProductionOrder] = []
         order_counter = 1
         year = self.config.start_date.year
+
+        std_map: Dict[Tuple[str, str], float] = {}
+        if standards:
+            for s in standards:
+                std_map[(s.machine_id, s.product_id)] = s.ideal_cycle_time_sec
 
         # Sort shifts chronologically
         sorted_shifts = sorted(shifts, key=lambda s: s.start_time)
@@ -34,6 +40,7 @@ class OrderGenerator:
         for line in lines:
             current_time = first_shift_start
             prod_idx = self.rng.randint(0, len(products) - 1)
+            lead_machine = f"MCH-{line.line_id}-01"
 
             while current_time < last_shift_end:
                 product = products[prod_idx % len(products)]
@@ -55,6 +62,8 @@ class OrderGenerator:
                 else:
                     status = OrderStatus.IN_PROGRESS
 
+                planned_cycle_time = std_map.get((lead_machine, product.product_id), 10.0)
+
                 orders.append(
                     ProductionOrder(
                         order_id=order_id,
@@ -64,6 +73,7 @@ class OrderGenerator:
                         scheduled_start=current_time,
                         scheduled_end=order_end,
                         status=status,
+                        planned_cycle_time_sec=planned_cycle_time,
                     )
                 )
 
@@ -71,3 +81,4 @@ class OrderGenerator:
                 prod_idx += 1  # rotate product
 
         return orders
+

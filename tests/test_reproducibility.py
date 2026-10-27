@@ -29,6 +29,14 @@ class TestReproducibility:
             hash2 = checksums2.get(filename)
             assert hash1 == hash2, f"SHA-256 mismatch on {filename}: {hash1} != {hash2}"
 
+        # Manifest itself must be bitwise identical across runs (timestamps moved to run_metadata.json)
+        manifest1_text = (dir1 / "manifest.json").read_text(encoding="utf-8")
+        manifest2_text = (dir2 / "manifest.json").read_text(encoding="utf-8")
+        assert manifest1_text == manifest2_text, "manifest.json differed across runs with identical seed!"
+        assert (dir1 / "run_metadata.json").exists()
+        assert (dir2 / "run_metadata.json").exists()
+
+
     def test_different_seeds_produce_different_data(self, tmp_path: Path):
         """Run starter generation with two distinct seeds; assert distinct telemetry."""
         dir1 = tmp_path / "run_seed_100"

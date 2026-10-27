@@ -134,12 +134,15 @@ class StateEventGenerator:
                             if remaining_sec <= 0:
                                 break
 
-                            # Decide if an unplanned stoppage occurs in this interval
-                            has_stop = (self.rng.random() < 0.20) and (remaining_sec > 900)
+                            # Decide if an operational stoppage occurs in this interval
+                            # Require at least 2,100s so there is room for run, stop, and run-out buffer before planned break
+                            has_stop = (remaining_sec > 2100) and (self.rng.random() < 0.55)
 
                             if has_stop:
-                                # Run for a while before the stop
-                                run_dur = self.rng.randint(300, min(remaining_sec - 300, 2400))
+                                # Run for a while before the stoppage (reserve 600s: 300s stop + 300s run-out buffer)
+                                max_avail = remaining_sec - 600
+                                min_run = min(1200, max_avail)
+                                run_dur = self.rng.randint(min_run, min(max_avail, 2400))
                                 run_end = curr_ptr + timedelta(seconds=run_dur)
 
                                 evt_id = f"EVT-{machine.machine_id}-{event_counters[machine.machine_id]:06d}"
@@ -159,42 +162,44 @@ class StateEventGenerator:
                                 )
                                 curr_ptr = run_end
 
-                                # Unplanned stoppage
-                                stop_rem = int((seg_end - curr_ptr).total_seconds())
-                                stop_dur = min(stop_rem, self.rng.randint(300, 1200))
-                                stop_end = curr_ptr + timedelta(seconds=stop_dur)
+                                # Unplanned stoppage / buffer starvation or blockage
+                                # Reserve at least 300s before seg_end so segment returns to RUNNING before planned break
+                                stop_rem = int((seg_end - curr_ptr).total_seconds()) - 300
+                                if stop_rem >= 180:
+                                    stop_dur = self.rng.randint(180, min(stop_rem, 480))
+                                    stop_end = curr_ptr + timedelta(seconds=stop_dur)
 
-                                stop_roll = self.rng.random()
-                                if stop_roll < 0.65:
-                                    st_type = MachineState.UNPLANNED_DOWNTIME
-                                    reason = self.rng.choice([
-                                        "DT-UNPLANNED-JAM",
-                                        "DT-UNPLANNED-ELEC",
-                                        "DT-UNPLANNED-TOOL",
-                                    ])
-                                elif stop_roll < 0.85:
-                                    st_type = MachineState.STARVED
-                                    reason = "DT-STOP-STARVED"
-                                else:
-                                    st_type = MachineState.BLOCKED
-                                    reason = "DT-STOP-BLOCKED"
+                                    stop_roll = self.rng.random()
+                                    if stop_roll < 0.65:
+                                        st_type = MachineState.UNPLANNED_DOWNTIME
+                                        reason = self.rng.choice([
+                                            "DT-UNPLANNED-JAM",
+                                            "DT-UNPLANNED-ELEC",
+                                            "DT-UNPLANNED-TOOL",
+                                        ])
+                                    elif stop_roll < 0.85:
+                                        st_type = MachineState.STARVED
+                                        reason = "DT-STOP-STARVED"
+                                    else:
+                                        st_type = MachineState.BLOCKED
+                                        reason = "DT-STOP-BLOCKED"
 
-                                evt_id = f"EVT-{machine.machine_id}-{event_counters[machine.machine_id]:06d}"
-                                event_counters[machine.machine_id] += 1
-                                all_events.append(
-                                    StateEvent(
-                                        event_id=evt_id,
-                                        machine_id=machine.machine_id,
-                                        shift_id=shift.shift_id,
-                                        order_id=active_order_id,
-                                        state=st_type,
-                                        start_time=curr_ptr,
-                                        end_time=stop_end,
-                                        duration_sec=stop_dur,
-                                        reason_code=reason,
+                                    evt_id = f"EVT-{machine.machine_id}-{event_counters[machine.machine_id]:06d}"
+                                    event_counters[machine.machine_id] += 1
+                                    all_events.append(
+                                        StateEvent(
+                                            event_id=evt_id,
+                                            machine_id=machine.machine_id,
+                                            shift_id=shift.shift_id,
+                                            order_id=active_order_id,
+                                            state=st_type,
+                                            start_time=curr_ptr,
+                                            end_time=stop_end,
+                                            duration_sec=stop_dur,
+                                            reason_code=reason,
+                                        )
                                     )
-                                )
-                                curr_ptr = stop_end
+                                    curr_ptr = stop_end
                             else:
                                 # Entire remaining segment is RUNNING
                                 evt_id = f"EVT-{machine.machine_id}-{event_counters[machine.machine_id]:06d}"

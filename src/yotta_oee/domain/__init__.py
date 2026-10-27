@@ -1,7 +1,9 @@
 """Domain module exporting all manufacturing models, enums, and mathematical formulas."""
 
 from yotta_oee.domain.enums import (
+    AggregateStatus,
     AnomalyType,
+    DefectCode,
     DowntimeCategory,
     InspectionType,
     LineType,
@@ -37,6 +39,7 @@ from yotta_oee.domain.oee_math import (
     calculate_performance,
     calculate_planned_production_time,
     calculate_quality,
+    calculate_sampled_quality,
     calculate_weighted_ideal_cycle_time,
     verify_oee_equivalence,
 )
@@ -50,6 +53,8 @@ __all__ = [
     "MachineState",
     "DowntimeCategory",
     "InspectionType",
+    "DefectCode",
+    "AggregateStatus",
     "AnomalyType",
     "ValidationRuleId",
     "Severity",
@@ -76,7 +81,9 @@ __all__ = [
     "calculate_performance",
     "calculate_multi_product_performance",
     "calculate_quality",
+    "calculate_sampled_quality",
     "calculate_oee",
     "verify_oee_equivalence",
     "calculate_weighted_ideal_cycle_time",
 ]
+

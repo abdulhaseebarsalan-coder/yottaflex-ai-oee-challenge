@@ -329,3 +329,227 @@ Across all 54 shift-machine rollups in the starter profile, the maximum observed
 1. **Micro-Stops Resolution**: Stoppages under 2 minutes are not recorded as individual state events due to event log volume; they are accounted for in speed loss reducing Performance.
 2. **In-Flight Orders Across Shifts**: Orders spanning multiple shifts split production counts and operating times cleanly by shift boundary based on sensor timestamp.
 
+---
+
+## 12. Phase 4b Architectural Refinements & Governance (Pre-Generation Lock)
+
+### 12.1 Dynamic Planned Production Time (PPT) Derivation
+- Rather than assuming a constant 3,600s planned break deduction across all shifts, PPT is dynamically derived from actual telemetry events:
+  $$\text{PPT} = \max\left(0, \text{Shift Duration} - \sum_{\text{events}} \text{duration of PLANNED\_DOWNTIME}\right)$$
+- This grounds PPT strictly in observed operational reality while preserving clean neutrality on Availability.
+
+### 12.2 EC-04 Redesign: ERP Order vs. Master Engineering Standard
+- **Design Principle**: Master engineering standards (`machine_product_standards.csv`) represent immutable, authoritative nameplate specifications and must never be corrupted.
+- **Implementation**: The work order (`production_orders.csv`) maintains a `planned_cycle_time_sec` field representing the ERP-dispatched takt rate. Anomaly EC-04 mutates this order-level parameter.
+- **Validation**: `VAL-PERF-001` performs a deterministic comparison between `order.planned_cycle_time_sec` and the corresponding `machine_product_standards.ideal_cycle_time_sec`, completely eliminating arbitrary hardcoded numerical range filters.
+
+### 12.3 EC-02 Cumulative Counter Arithmetic Reconciliation
+- To prevent an isolated count drop anomaly from creating an unrealistic cascade of downstream reconciliation errors, the injector offsets all subsequent cumulative count records for that `(order_id, machine_id)` sequence by $-\Delta$.
+- This isolates the anomaly to the exact injection point while maintaining natural monotonicity downstream.
+
+### 12.4 Natural Record ID Generation (No Giveaway IDs)
+- Anomaly injection assigns natural sequential identifiers (`EVT-<mch>-<seq:06d>`), strictly prohibiting artificial sentinel IDs (such as `999905`). Injected rows blend indistinguishably into telemetry streams.
+
+### 12.5 Independent Defect Code Taxonomy
+- Quality defects are decoupled from downtime root-cause codes. A dedicated `DefectCode` enum (`SURFACE_SCRATCH`, `DIMENSIONAL_OUT_OF_SPEC`, `BURR_CONTAMINATION`, `CRACK_DEFECT`, `CONTAMINATION`, `ASSEMBLY_MISALIGNMENT`) governs inspection audit findings, eliminating the invalid foreign key to `downtime_reasons`.
+
+### 12.6 Quality Definition via Lot Sampled Yield
+- In discrete manufacturing environments where inspecting 100% of units is prohibitive, quality audits sample lots (e.g. 20-30 units per shift).
+- Quality ratio is formally defined as conforming sample yield:
+  $$Q = \frac{\text{Passed Quantity}}{\text{Inspected Quantity}}$$
+- Inferred shift-level conforming count is computed as:
+  $$\text{Good Count} = \text{round}(\text{Total Count} \times Q), \quad \text{Scrap Count} = \text{Total Count} - \text{Good Count}$$
+
+### 12.7 OEE Engine Decision Policy & Exception Accounting
+- The OEE calculator consumes validation findings blindly (without access to ground truth) and executes a documented triage policy:
+  - **EXCLUDE**: Excludes corrupted records (e.g. impossible state timestamps) from duration sums.
+  - **CLIP**: Bounds unphysical ratios to valid domains (e.g. scrap > total clipped to $Q = 0.0$).
+  - **FLAG**: Populates `status` (`CLEAN`, `FLAGGED`, `ANOMALOUS`) and records `exception_count` on `oee_aggregates.csv`.
+
+### 12.8 Record-Level Benchmark Matching
+- Evaluation matches detections at the `(table_name, record_id)` entity level. Companion detections (such as state overlap and time accounting firing on the same overlapping record) are scored as detections for that anomaly rather than false positives, yielding true reflection of engine precision.
+
+### 12.9 Bitwise Reproducibility Manifest Isolation
+- Execution timestamps and machine-local absolute path strings are written strictly to `run_metadata.json`. The verification `manifest.json` contains solely deterministic keys (`profile`, `seed`, `row_counts`, `checksums_sha256`), guaranteeing bitwise-identical verification across any execution directories.
+
+### 12.10 Explicit Profile Density Parameters
+- Generation profile configs feature explicit density parameters (`target_events_per_shift_machine`, `pulse_interval_sec`) with pre-generation analytical formulas ensuring the full profile calculates $\ge 100,000$ state events and $\ge 500,000$ count+QC records before generation commences.
+
+---
+
+## 13. Phase 4c Governance & Triage Verification (Pre-Scale Calibration)
+
+### 13.1 Full Profile Volume Calibration & Bounds Assertion
+- `FULL_CONFIG` is calibrated with:
+  - `pulse_interval_sec = 360` (70 count pulses per machine-shift $\times$ 8,100 machine-shifts = 567,000 counts)
+  - `qc_samples_per_shift_machine = 2` (16,200 QC inspections)
+  - `target_events_per_shift_machine = 13` (105,300 state events)
+  - Combined count + QC records: **583,200**, strictly within the approved $[500,000, 700,000]$ bound.
+  - State events: **105,300**, strictly $\ge 100,000$.
+  - Unit test `test_full_profile_pre_generation_volume_assertions` enforces both lower and upper bounds analytically prior to generation.
+
+### 13.2 Mathematical OEE Identity Restoration (Tolerance $10^{-6}$)
+- The approved analytical equivalence tolerance of $10^{-6}$ is restored:
+  $$\left|(A \times P \times Q) - \frac{\text{Good Count} \times \text{ICT}_{\text{eff}}}{\text{PPT}}\right| \le 10^{-6}$$
+- **Integer Quantization**: Quality ratio $Q$ is computed from the sample yield, but to prevent discrete fractional discrepancies between product-of-factors and mass-energy balance, integer conforming units are defined as:
+  $$\text{Good Count} = \operatorname{round}(\text{Total Count} \times \text{Yield}_{\text{sample}})$$
+  $$Q = \frac{\text{Good Count}}{\text{Total Count}}$$
+- Because the exact same integer `good_count` and `total_count` are used in both equations, $A \times P \times Q$ and $\frac{\text{Good Count} \times \text{ICT}}{\text{PPT}}$ simplify to identical mathematical terms, achieving exact floating-point equality ($\text{delta} < 10^{-15}$, max observed $2.22 \times 10^{-16}$).
+
+### 13.3 Concrete Anomaly Triage Policies
+The OEE calculator consumes validation findings without ground truth and executes the following documented triage policies:
+1. **EC-01 (Overlapping States)**:
+   - *Triage*: The earlier state event is truncated at the start timestamp of the subsequent event (`e_dt = next_s_dt`).
+   - *Impact*: Eliminates artificial overlap while preserving shift sum accounting ($\sum \text{durations} = \text{shift duration}$).
+2. **EC-02 (Unexplained Count Drop)**:
+   - *Triage*: `total_count` is calculated strictly as the sum of non-negative and valid correction `count_delta` records, completely ignoring corrupted cumulative counters (`sum(count_delta)`).
+   - *Impact*: Recovers the true production output minus the single corrupted pulse.
+3. **EC-03 (Scrap Exceeds Inspected)**:
+   - *Triage*: Corrupted inspection records (where $\text{scrap} > \text{inspected}$ or mass balance fails) are excluded from the sample lot calculation. The shift flags the aggregate (`status = ANOMALOUS`) and computes conforming yield from valid remaining inspections. The engine never forces an unphysical $Q = 0.0$.
+4. **EC-04 (Order Cycle Time Discrepancy)**:
+   - *Triage*: Machine Performance calculation strictly resolves the engineering standard takt time from the authoritative `machine_product_standards.csv` (master ICT), entirely bypassing the erroneous order takt rate.
+   - *Impact*: Performance and OEE recover completely to the clean baseline value.
+5. **EC-05 (Breakdown Overlaps Scheduled Break)**:
+   - *Triage*: The unplanned breakdown duration is clipped at the scheduled break boundary (`dur = max(0, dur - overlap_sec)`). The scheduled break duration is preserved intact.
+   - *Impact*: Planned production time and Availability are fully preserved without double-counting stoppage time.
+
+### 13.4 Quality & Rework Modeling
+- **Rework Assumption**: In alignment with approved challenge assumptions, reworked units are successfully salvaged within the shift and pass final quality audit. Conforming count is therefore:
+  $$\text{Conforming Units} = \text{Inspected Units} - \text{Scrap Units} = \text{Passed Units} + \text{Rework Units}$$
+- **Sample-Based Limits**: Because sampling audits represent ~2.6% of production output (e.g. 20-50 units sampled out of ~1,500 produced per shift), sampling error is bounded by lot size. The OEE engine logs sample coverage, sample size statistics (min, max, mean), and notes sample-based estimation limits in execution metadata.
+
+### 13.5 Clean Baseline Recovery Verification
+- A full clean baseline (`skip_anomalies=True`, identical seed) produces **0 validation findings** across all 17 rules.
+- Comparing mutated OEE aggregates against the clean baseline confirms that unaffected machine-shifts match bitwise-identically, while affected machine-shifts recover cleanly or differ strictly in the documented triage manner.
+
+### 13.6 Parameterized Anomaly Distribution
+- Anomaly injector parameterizes anomaly counts (10 per type = 50 total for full profile; 1 per type = 5 total for starter profile).
+- Detections and injections are constrained to distinct `(machine_id, shift_id)` tuples, ensuring anomalies never collide on the same machine-shift.
+
+---
+
+## 14. Phase 4c Volume Gate & Empirical Density Calibration
+
+### 14.1 Initial Dry-Run Defect Discovery
+Prior to committing to full-scale generation, a 3-day dry run was executed in a temporary directory across the full 5-line / 30-machine / 20-product topology ($N = 270$ machine-shifts):
+1. **State Events Deficit**: Measured 2,568 state events ($9.51$ events/machine-shift). Extrapolated to 90 days ($8,100$ machine-shifts), this yielded **77,040 state events**, violating the required $\ge 100,000$ bound.
+2. **Quality Inspection Under-Sampling**: Measured 270 QC rows ($1.00$ sample/machine-shift), rather than the configured 2.0 samples.
+3. **Count + QC Proximity**: Extrapolated combined count + QC was **533,220**, dangerously close to the 500,000 lower bound.
+
+### 14.2 Root Cause Diagnosis
+1. **State Event Density**: `StateEventGenerator` previously evaluated stoppage occurrence once per work block (`p_stop < 0.20`). When False (80% of the time), the loop set `curr_ptr = seg_end`, collapsing entire 1.5–2 hour blocks into single monolithic `RUNNING` events.
+2. **Quality Inspection Triggering**: `TelemetryGenerator` tracked inspections using a single-use `set` keyed by `(shift_id, order_id, machine_id)`. Once recorded, subsequent running events in the shift were bypassed, capping inspections at 1 per machine-shift regardless of configuration.
+3. **Telemetry Polling Arithmetic**: Operating time averages ~22,000s per shift (accounting for breaks, changeovers, and stoppages). At `pulse_interval_sec = 360`, only ~61 pulses were emitted per machine-shift.
+
+### 14.3 Algorithmic Density Solutions
+1. **Operational Sub-Intervals (`StateEventGenerator`)**:
+   - Replaced monolithic work block completion with realistic operational cycles: when `remaining_sec > 2,100s`, the generator alternates running blocks (20–40 min) with short stoppages/starvations/blockages (3–8 min) at $p = 0.55$.
+   - **Lifecycle Integrity**: Stoppages are bounded to end at least 300s before planned breaks, ensuring work blocks always conclude in a `RUNNING` state, preserving the valid `RUNNING -> PLANNED_DOWNTIME` transition.
+   - Result: Measured state events increased to **14.85 per machine-shift** (**120,270 extrapolated**, a safe $+20.3\%$ margin above 100,000).
+2. **Multi-Sample Inspection Tracking (`TelemetryGenerator`)**:
+   - Refactored `inspected_orders_shifts` to track sample count per `(shift_id, machine_id)`.
+   - Triggers `FIRST_PIECE` audit early in the shift (`cum_count > 25`) and `IN_PROCESS` audit mid/late shift (`cum_count > 80`).
+   - Result: Measured QC samples reached exactly **2.00 per machine-shift** (**16,200 extrapolated**).
+3. **Calibrated Polling Frequency (`FULL_CONFIG.pulse_interval_sec = 310`)**:
+   - Polling frequency set to 310s (5 min 10s), generating **71.59 count pulses per machine-shift** (**579,900 counts extrapolated**).
+   - Combined Count + QC reaches **596,100 records**, centered precisely at ~600k (margins: $+19.2\%$ above 500k, $-14.8\%$ below 700k).
+
+### 14.4 Post-Generation Empirical Assertion Test
+- Implemented `test_measured_generated_dataset_volume_and_extrapolated_bounds` in `tests/test_generator.py`.
+- Generates a 3-day dry run across the full topology into `tmp_path`, reads actual CSV rows directly from disk, asserts per-shift rates, and enforces both lower and upper bounds on empirical post-generation counts.
+
+### 14.5 Full Profile Runtime and File Size Projections
+- **3-Day Dry Run**: 0.533 seconds, 2.66 MB total CSV files.
+- **Extrapolated 90-Day Full Profile**:
+  - Runtime: **~16.0 seconds** ($< 20$ seconds).
+  - Storage Footprint: **~79.75 MB** uncompressed CSV across all 12 tables.
+
+---
+
+## 15. Step 1 Full Run Execution & Benchmark Verification
+
+### 15.1 Actual Generated Volumes & Bounds Assertion
+The full synthetic dataset was generated with seed `20261022` into `data/full/` (added to `.gitignore`):
+- **Topology**: 1 Plant, 5 Lines, 30 Machines, 20 Products, 9 Downtime Reasons, 600 Standards.
+- **Temporal Horizon**: 90 Days × 3 Shifts/Day = 270 Shifts (8,100 machine-shifts total).
+- **Actual Measured Entity Row Counts**:
+  - `plants.csv`: 1
+  - `lines.csv`: 5
+  - `machines.csv`: 30
+  - `products.csv`: 20
+  - `shifts.csv`: 270
+  - `machine_product_standards.csv`: 600
+  - `downtime_reasons.csv`: 9
+  - `production_orders.csv`: 690
+  - `state_events.csv`: **120,124** (Target: $\ge 100,000$; Margin: $+20.1\%$)
+  - `production_counts.csv`: **585,380**
+  - `quality_inspections.csv`: **16,200** (Exactly 2.00 samples per machine-shift)
+  - `ground_truth.csv`: **50** (10 per edge case on distinct machine-shifts)
+- **Combined Volume Bounds**:
+  - Combined Count + QC = $585,380 + 16,200 = \mathbf{601,580}$ records.
+  - Satisfies strictly the requirement: $500,000 \le 601,580 \le 700,000$ ($+20.3\%$ above lower bound, $-14.1\%$ below upper bound).
+
+### 15.2 Multi-Rule Validation Findings (721,704 Operational Records)
+All 17 validation rules were evaluated against `data/full/` without ground truth, producing `reports/validation_findings_full.json`:
+- **Total Findings**: 100
+- **Total Flagged Records**: Exactly 50 records (matching the 50 injected anomalies).
+- **False Positives**: **0** (0 unexpected records flagged).
+- **Rule Breakdown**:
+  - `VAL-COUNT-001` (Count Decrement): 10 (all 10 EC-02 count drops)
+  - `VAL-PERF-001` (Cycle Time Discrepancy): 10 (all 10 EC-04 order takt discrepancies)
+  - `VAL-QUAL-001` (Mass Balance / Scrap Overflow): 20 (all 10 EC-03 scrap > inspected and mass balance errors)
+  - `VAL-STATE-001` (State Transition Lifecycle): 10 (all 10 EC-05 illegal break-to-breakdown transitions)
+  - `VAL-TIME-002` (State Overlap): 20 (all 10 EC-01 state overlaps + 10 EC-05 breakdown overlaps)
+  - `VAL-TIME-003` (Break Collision): 10 (all 10 EC-05 breakdown collisions with shift break)
+  - `VAL-TIME-005` (Time Accounting Sum): 20 (all 10 EC-01 sum discrepancies + 10 EC-05 sum discrepancies)
+
+### 15.3 Shift-Level OEE Aggregation & Analytical Identity
+OEE calculation was executed consuming the 100 validation findings with documented triage policies:
+- **Total Aggregates**: Exactly 8,100 (270 shifts × 30 machines).
+- **Status Distribution**:
+  - `CLEAN`: 7,952 aggregates
+  - `ANOMALOUS`: 148 aggregates (encompassing affected shifts)
+  - `FLAGGED`: 0 aggregates
+- **Metric Distributions**:
+  - **Availability ($A$)**: Min = 0.8088, Mean = 0.9279, Max = 1.0000
+  - **Performance ($P$)**: Min = 0.7611, Mean = 0.8479, Max = 0.9005
+  - **Quality ($Q$)**: Min = 0.9195, Mean = 0.9913, Max = 1.0000
+  - **OEE**: Min = 0.6133, Mean = 0.7803, Max = 0.8965
+- **Operational Warnings**:
+  - Performance $> 1.20$ warnings: **0**
+- **Analytical Equivalence Identity ($|(A \times P \times Q) - \frac{\text{Good} \times \text{ICT}}{\text{PPT}}| \le 10^{-6}$)**:
+  - Verified: 8,100 | Passed: 8,100 | Failed: 0
+  - Maximum Delta: **$3.33 \times 10^{-16}$** (orders of magnitude below the $10^{-6}$ tolerance).
+
+### 15.4 Anomaly Detection Benchmark Performance
+The independent benchmark evaluator evaluated `reports/validation_findings_full.json` against `data/full/ground_truth.json`:
+- **Overall Metrics**:
+  - Total Ground Truth Anomalies: 50
+  - True Positives (TP): 50
+  - False Positives (FP): 0
+  - False Negatives (FN): 0
+  - **Precision**: 100.00%
+  - **Recall**: 100.00%
+  - **F1-Score**: 100.00%
+- **Detection Rate by Challenge Edge Case**:
+  - `OVERLAPPING_STATE` (EC-01): 10 / 10 (100.0%)
+  - `UNEXPLAINED_COUNT_DROP` (EC-02): 10 / 10 (100.0%)
+  - `SCRAP_EXCEEDS_TOTAL` (EC-03): 10 / 10 (100.0%)
+  - `INVALID_CYCLE_TIME` (EC-04): 10 / 10 (100.0%)
+  - `BREAKDOWN_OVERLAPS_BREAK` (EC-05): 10 / 10 (100.0%)
+
+### 15.5 Ground-Truth Isolation & Reproducibility Verification
+1. **Engine Isolation**:
+   - Static analysis confirmed neither `yotta_oee.validator` nor `yotta_oee.calculator` imports or reads `ground_truth.csv` or `ground_truth.json`.
+   - Both engines process solely production telemetry, machine standards, and validation finding reports.
+2. **Bitwise Determinism**:
+   - Generated the full profile in a separate process with identical seed `20261022` and compared SHA-256 hashes against `data/full/`.
+   - All 12 generated CSV files and `manifest.json` matched bit-for-bit (0 differences).
+3. **Seed Variance**:
+   - Generated the full profile in a separate process with a different seed (`20261099`).
+   - Verified that all operational datasets (`state_events.csv`, `production_counts.csv`, `quality_inspections.csv`, `production_orders.csv`, `manifest.json`) produced completely distinct SHA-256 checksums.
+
+
+
+
+

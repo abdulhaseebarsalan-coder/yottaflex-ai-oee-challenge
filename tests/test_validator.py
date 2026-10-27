@@ -114,3 +114,105 @@ class TestIndividualValidationRules:
         findings = rule.validate({"state_events.csv": events_df})
         assert len(findings) == 1
         assert findings[0].rule_id == ValidationRuleId.VAL_TIME_001
+
+    def test_required_fields_rule_catches_nulls(self):
+        from yotta_oee.validator.rules_relational import RequiredFieldsRule
+        rule = RequiredFieldsRule()
+        df = pl.DataFrame({
+            "plant_id": ["PLANT-01", "PLANT-02"],
+            "name": ["Facility A", ""],  # Blank name
+            "timezone": ["UTC", "UTC"],
+            "country": ["USA", "USA"],
+        })
+        findings = rule.validate({"plants.csv": df})
+        assert len(findings) == 1
+        assert findings[0].rule_id == ValidationRuleId.VAL_REL_004
+        assert findings[0].record_id == "PLANT-02"
+
+    def test_duration_consistency_rule_catches_discrepancy(self):
+        from yotta_oee.validator.rules_temporal import DurationConsistencyRule
+        rule = DurationConsistencyRule()
+        events_df = pl.DataFrame({
+            "event_id": ["EVT-01"],
+            "start_time": ["2026-01-01T10:00:00Z"],
+            "end_time": ["2026-01-01T10:30:00Z"],  # 1800 seconds
+            "duration_sec": [1200],                 # Discrepancy (1200 != 1800)
+        })
+        findings = rule.validate({"state_events.csv": events_df})
+        assert len(findings) == 1
+        assert findings[0].rule_id == ValidationRuleId.VAL_TIME_004
+        assert "1800" in findings[0].message
+
+    def test_time_accounting_rule_catches_shift_sum_error(self):
+        from yotta_oee.validator.rules_temporal import TimeAccountingRule
+        rule = TimeAccountingRule()
+        shifts_df = pl.DataFrame({
+            "shift_id": ["SHIFT-01"],
+            "start_time": ["2026-01-01T06:00:00Z"],
+            "end_time": ["2026-01-01T14:00:00Z"],  # 28,800 seconds
+        })
+        events_df = pl.DataFrame({
+            "event_id": ["EVT-01"],
+            "machine_id": ["MCH-01"],
+            "shift_id": ["SHIFT-01"],
+            "duration_sec": [27000],  # 27,000s != 28,800s
+        })
+        findings = rule.validate({"state_events.csv": events_df, "shifts.csv": shifts_df})
+        assert len(findings) == 1
+        assert findings[0].rule_id == ValidationRuleId.VAL_TIME_005
+        assert "discrepancy" in findings[0].message
+
+    def test_state_transition_lifecycle_catches_illegal_transition(self):
+        from yotta_oee.validator.rules_business import StateTransitionLifecycleRule
+        rule = StateTransitionLifecycleRule()
+        events_df = pl.DataFrame({
+            "event_id": ["EVT-01", "EVT-02"],
+            "machine_id": ["MCH-01", "MCH-01"],
+            "start_time": ["2026-01-01T06:00:00Z", "2026-01-01T06:30:00Z"],
+            "state": ["PLANNED_DOWNTIME", "STARVED"],  # Illegal direct transition
+            "order_id": [None, None],
+            "reason_code": [None, None],
+        })
+        findings = rule.validate({"state_events.csv": events_df})
+        assert len(findings) == 1
+        assert findings[0].rule_id == ValidationRuleId.VAL_STATE_001
+
+    def test_correction_reference_validity(self):
+        from yotta_oee.validator.rules_business import CorrectionReferenceValidityRule
+        rule = CorrectionReferenceValidityRule()
+        counts_df = pl.DataFrame({
+            "count_id": ["CNT-01"],
+            "order_id": ["PO-01"],
+            "machine_id": ["MCH-01"],
+            "timestamp": ["2026-01-01T06:05:00Z"],
+            "is_correction": [True],
+            "correction_ref_id": [None],  # Missing correction_ref_id!
+        })
+        findings = rule.validate({"production_counts.csv": counts_df})
+        assert len(findings) == 1
+        assert findings[0].rule_id == ValidationRuleId.VAL_COUNT_003
+
+    def test_cycle_time_adherence_compares_order_with_master(self):
+        from yotta_oee.validator.rules_business import CycleTimeAdherenceRule
+        rule = CycleTimeAdherenceRule()
+        orders_df = pl.DataFrame({
+            "order_id": ["PO-01"],
+            "product_id": ["PRD-01"],
+            "line_id": ["LINE-01"],
+            "planned_cycle_time_sec": [0.35],  # Inconsistent takt time
+        })
+        std_df = pl.DataFrame({
+            "standard_id": ["STD-01"],
+            "machine_id": ["MCH-LINE-01-01"],
+            "product_id": ["PRD-01"],
+            "ideal_cycle_time_sec": [12.0],    # Master engineering standard
+        })
+        findings = rule.validate({
+            "production_orders.csv": orders_df,
+            "machine_product_standards.csv": std_df,
+        })
+        assert len(findings) == 1
+        assert findings[0].rule_id == ValidationRuleId.VAL_PERF_001
+        assert "0.350s" in findings[0].message
+        assert "12.000s" in findings[0].message
+

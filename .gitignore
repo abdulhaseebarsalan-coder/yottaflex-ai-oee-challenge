@@ -22,6 +22,7 @@ htmlcov/
 
 # Generated Data directories
 data/
+data/full/
 reports/
 
 # IDE files

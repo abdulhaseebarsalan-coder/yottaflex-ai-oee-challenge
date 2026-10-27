@@ -5,6 +5,7 @@ import random
 from typing import Dict, List, Optional, Tuple
 
 from yotta_oee.domain import (
+    DefectCode,
     InspectionType,
     MachineProductStandard,
     MachineState,
@@ -45,8 +46,8 @@ class TelemetryGenerator:
         count_seq_counters: Dict[str, int] = {}
         qc_seq_counter = 1
 
-        # Track quality inspections already created per order/shift to avoid flooding
-        inspected_orders_shifts: set[Tuple[str, str]] = set()
+        # Track quality inspections already created per shift/machine
+        inspected_orders_shifts: Dict[Tuple[str, str], int] = {}
 
         # Filter only RUNNING events with an assigned order
         running_events = [
@@ -99,7 +100,8 @@ class TelemetryGenerator:
                 )
 
                 # Occasionally inject a legitimate audit correction event (0.5% chance)
-                if self.rng.random() < 0.005 and cum_count > 50:
+                # Must have at least 5 seconds remaining in RUNNING event so correction strictly succeeds referenced count
+                if self.rng.random() < 0.005 and cum_count > 50 and curr_pulse_time + timedelta(seconds=5) < event.end_time:
                     corr_delta = -self.rng.randint(2, 8)
                     cum_count += corr_delta
                     corr_count_id = f"CNT-{event.order_id}-{seq_num:06d}"
@@ -126,37 +128,48 @@ class TelemetryGenerator:
             cumulative_counts[order_key] = cum_count
             count_seq_counters[event.order_id] = seq_num
 
-            # Trigger quality inspections once or twice per shift window
-            shift_order_key = (event.shift_id, event.order_id, event.machine_id)
-            if shift_order_key not in inspected_orders_shifts and cum_count > 30:
-                inspected_orders_shifts.add(shift_order_key)
+            # Trigger quality inspections per shift window according to qc_samples_per_shift_machine
+            shift_mch_key = (event.shift_id, event.machine_id)
+            curr_qc = inspected_orders_shifts.get(shift_mch_key, 0)
+            target_qc = self.config.qc_samples_per_shift_machine
 
-                # First piece inspection early in order, or in-process
-                itype = InspectionType.FIRST_PIECE if cum_count < 100 else InspectionType.IN_PROCESS
-                sample_size = 20 if itype == InspectionType.FIRST_PIECE else self.rng.choice([30, 50])
+            if curr_qc < target_qc and cum_count > 25:
+                trigger = False
+                if curr_qc == 0:
+                    trigger = True
+                    itype = InspectionType.FIRST_PIECE
+                    sample_size = 20
+                    sample_offset = timedelta(minutes=min(30, max(5, event.duration_sec // 120)))
+                elif curr_qc == 1 and cum_count > 80:
+                    trigger = True
+                    itype = InspectionType.IN_PROCESS
+                    sample_size = self.rng.choice([30, 50])
+                    sample_offset = timedelta(minutes=min(45, max(10, event.duration_sec // 120)))
 
-                # Typical discrete yield: 96% - 99%
-                scrap = self.rng.choices([0, 1, 2], weights=[0.80, 0.15, 0.05])[0]
-                rework = self.rng.choices([0, 1], weights=[0.90, 0.10])[0]
-                passed = sample_size - (scrap + rework)
+                if trigger:
+                    inspected_orders_shifts[shift_mch_key] = curr_qc + 1
+                    scrap = self.rng.choices([0, 1, 2], weights=[0.80, 0.15, 0.05])[0]
+                    rework = self.rng.choices([0, 1], weights=[0.90, 0.10])[0]
+                    passed = sample_size - (scrap + rework)
 
-                qc_id = f"QC-{year}-{qc_seq_counter:06d}"
-                qc_seq_counter += 1
+                    qc_id = f"QC-{year}-{qc_seq_counter:06d}"
+                    qc_seq_counter += 1
 
-                inspections.append(
-                    QualityInspection(
-                        inspection_id=qc_id,
-                        order_id=event.order_id,
-                        machine_id=event.machine_id,
-                        shift_id=event.shift_id,
-                        timestamp=event.start_time + timedelta(minutes=45),
-                        inspection_type=itype,
-                        inspected_qty=sample_size,
-                        passed_qty=passed,
-                        scrap_qty=scrap,
-                        rework_qty=rework,
-                        defect_code="DT-UNPLANNED-JAM" if scrap > 0 else None,
+                    inspections.append(
+                        QualityInspection(
+                            inspection_id=qc_id,
+                            order_id=event.order_id,
+                            machine_id=event.machine_id,
+                            shift_id=event.shift_id,
+                            timestamp=event.start_time + sample_offset,
+                            inspection_type=itype,
+                            inspected_qty=sample_size,
+                            passed_qty=passed,
+                            scrap_qty=scrap,
+                            rework_qty=rework,
+                            defect_code=self.rng.choice(list(DefectCode)) if scrap > 0 else None,
+                        )
                     )
-                )
+
 
         return counts, inspections

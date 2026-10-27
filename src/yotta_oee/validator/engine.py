@@ -12,21 +12,27 @@ from rich.table import Table
 from yotta_oee.domain.enums import Severity
 from yotta_oee.validator.base import BaseValidationRule, RuleFinding, ValidationSummary
 from yotta_oee.validator.rules_business import (
+    CorrectionReferenceValidityRule,
     CountProgressionRule,
     CycleTimeAdherenceRule,
+    PerformancePlausibilityRule,
     QualityMassBalanceRule,
     RunningStateAuthorizationRule,
+    StateTransitionLifecycleRule,
 )
 from yotta_oee.validator.rules_relational import (
     DeDuplicationRule,
     EnumDomainRule,
     FKReferentialIntegrityRule,
     PKUniquenessRule,
+    RequiredFieldsRule,
 )
 from yotta_oee.validator.rules_temporal import (
     BreakDowntimeOverlapRule,
+    DurationConsistencyRule,
     StateMutualExclusivityRule,
     TemporalMonotonicityRule,
+    TimeAccountingRule,
 )
 
 console = Console(safe_box=True)
@@ -39,25 +45,32 @@ class ValidationEngine:
         if rules is not None:
             self.rules = rules
         else:
-            # Default complete rule suite
+            # Complete system validation suite
             self.rules = [
                 PKUniquenessRule(),
                 FKReferentialIntegrityRule(),
                 EnumDomainRule(),
+                RequiredFieldsRule(),
                 DeDuplicationRule(),
                 TemporalMonotonicityRule(),
+                DurationConsistencyRule(),
                 StateMutualExclusivityRule(),
                 BreakDowntimeOverlapRule(),
+                TimeAccountingRule(),
+                StateTransitionLifecycleRule(),
                 CountProgressionRule(),
+                CorrectionReferenceValidityRule(),
                 RunningStateAuthorizationRule(),
                 QualityMassBalanceRule(),
                 CycleTimeAdherenceRule(),
+                PerformancePlausibilityRule(),
             ]
 
     def validate_directory(
         self,
         data_dir: Path,
         output_report: Optional[Path] = None,
+
     ) -> ValidationSummary:
         """Load dataset from directory (ignoring ground truth) and run all validation rules."""
         dataset = self._load_dataset(data_dir)

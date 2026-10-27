@@ -9,7 +9,9 @@ from typing import Any, Dict, Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from yotta_oee.domain.enums import (
+    AggregateStatus,
     AnomalyType,
+    DefectCode,
     DowntimeCategory,
     InspectionType,
     LineType,
@@ -166,6 +168,7 @@ class ProductionOrder(BaseModel):
     scheduled_start: datetime
     scheduled_end: datetime
     status: OrderStatus = Field(default=OrderStatus.PLANNED)
+    planned_cycle_time_sec: float = Field(default=2.5, gt=0.0, description="Planned takt time in seconds for this order")
 
     @model_validator(mode="after")
     def validate_schedule(self) -> "ProductionOrder":
@@ -182,6 +185,7 @@ class ProductionOrder(BaseModel):
             "scheduled_start": format_iso(self.scheduled_start),
             "scheduled_end": format_iso(self.scheduled_end),
             "status": self.status.value,
+            "planned_cycle_time_sec": round(self.planned_cycle_time_sec, 3),
         }
 
 
@@ -273,7 +277,7 @@ class QualityInspection(BaseModel):
     passed_qty: int = Field(..., ge=0)
     scrap_qty: int = Field(..., ge=0)
     rework_qty: int = Field(..., ge=0)
-    defect_code: Optional[str] = Field(default=None)
+    defect_code: Optional[DefectCode] = Field(default=None)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -287,7 +291,7 @@ class QualityInspection(BaseModel):
             "passed_qty": self.passed_qty,
             "scrap_qty": self.scrap_qty,
             "rework_qty": self.rework_qty,
-            "defect_code": self.defect_code or "",
+            "defect_code": self.defect_code.value if self.defect_code else "",
         }
 
 
@@ -316,6 +320,8 @@ class OEEAggregate(BaseModel):
     performance: float = Field(..., ge=0.0)
     quality: float = Field(..., ge=0.0)
     oee: float = Field(..., ge=0.0)
+    status: AggregateStatus = Field(default=AggregateStatus.CLEAN)
+    exception_count: int = Field(default=0, ge=0)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -336,7 +342,10 @@ class OEEAggregate(BaseModel):
             "performance": round(self.performance, 4),
             "quality": round(self.quality, 4),
             "oee": round(self.oee, 4),
+            "status": self.status.value,
+            "exception_count": self.exception_count,
         }
+
 
 
 class GroundTruthAnomaly(BaseModel):

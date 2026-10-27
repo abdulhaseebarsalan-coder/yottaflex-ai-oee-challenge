@@ -57,7 +57,7 @@ class DataGenerationEngine:
         self.output_dir = Path(output_dir) if output_dir else Path("data") / profile
         self.rng = random.Random(seed)
 
-    def generate_and_export(self) -> GenerationResult:
+    def generate_and_export(self, skip_anomalies: bool = False) -> GenerationResult:
         """Execute end-to-end generation, inject anomalies, serialize CSVs, and write manifest."""
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -73,7 +73,7 @@ class DataGenerationEngine:
 
         # 2. Production Orders Scheduling
         order_gen = OrderGenerator(self.config, self.rng)
-        orders = order_gen.generate_orders(lines, products, shifts)
+        orders = order_gen.generate_orders(lines, products, shifts, standards)
 
         # 3. State Events Timeline
         state_gen = StateEventGenerator(self.config, self.rng)
@@ -85,15 +85,19 @@ class DataGenerationEngine:
             state_events, orders, standards
         )
 
-        # 5. Anomaly Injection & Ground Truth Logging
-        injector = AnomalyInjector(self.config, self.rng)
-        (
-            state_events,
-            counts,
-            inspections,
-            standards,
-            ground_truth,
-        ) = injector.inject_all(state_events, counts, inspections, standards, shifts)
+        # 5. Anomaly Injection & Ground Truth Logging (bypassed if clean baseline requested)
+        if skip_anomalies:
+            ground_truth = []
+        else:
+            injector = AnomalyInjector(self.config, self.rng)
+            (
+                state_events,
+                counts,
+                inspections,
+                orders,
+                standards,
+                ground_truth,
+            ) = injector.inject_all(state_events, counts, inspections, orders, standards, shifts)
 
         # 6. Deterministic Pre-Sorting
         plants.sort(key=lambda p: p.plant_id)
@@ -139,12 +143,20 @@ class DataGenerationEngine:
             json.dump([g.to_dict() for g in ground_truth], f, indent=2)
         checksums["ground_truth.json"] = self._compute_sha256(gt_json_path)
 
-        # 8. Manifest Generation
-        manifest = {
+        # Write execution timestamp to separate run_metadata.json (not used for reproducibility comparison)
+        run_metadata = {
             "profile": self.config.profile_name,
             "seed": self.seed,
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "output_directory": str(self.output_dir.resolve()),
+        }
+        with open(self.output_dir / "run_metadata.json", "w", encoding="utf-8") as f:
+            json.dump(run_metadata, f, indent=2)
+
+        # 8. Manifest Generation (purely deterministic for bitwise verification across runs)
+        manifest = {
+            "profile": self.config.profile_name,
+            "seed": self.seed,
             "row_counts": row_counts,
             "checksums_sha256": checksums,
         }
@@ -152,6 +164,7 @@ class DataGenerationEngine:
         manifest_path = self.output_dir / "manifest.json"
         with open(manifest_path, "w", encoding="utf-8") as f:
             json.dump(manifest, f, indent=2)
+
 
         return GenerationResult(
             profile_name=self.config.profile_name,

@@ -120,3 +120,97 @@ class TestDataGenerationEngineStarter:
             ValidationRuleId.VAL_TIME_003.value,
         }
         assert rule_ids == expected_rules
+
+    def test_full_profile_pre_generation_volume_assertions(self, capsys):
+        """Assert full-profile calculated volumes satisfy >= 100,000 state events
+
+        and count+QC between 500,000 and 700,000 before any actual generation takes place.
+        """
+        from yotta_oee.generator.config import get_profile_config
+
+        config = get_profile_config("full")
+        assert config.num_lines == 5
+        assert config.machines_per_line == 6
+        assert config.num_products == 20
+        assert config.num_days == 90
+        assert config.total_machines == 30
+        assert config.total_shifts == 270
+        assert config.total_machine_shifts == 8100
+
+        counts = config.compute_analytic_counts()
+        print("\n--- Full Profile Analytic Per-Entity Volume Estimates ---")
+        for entity, cnt in counts.items():
+            print(f"  {entity}: {cnt:,}")
+
+        assert counts["state_events"] >= 100_000, f"Expected >= 100k state events, got {counts['state_events']}"
+        assert (
+            500_000 <= counts["count_plus_qc"] <= 700_000
+        ), f"Expected count+QC between 500k and 700k, got {counts['count_plus_qc']}"
+        assert counts["ground_truth_anomalies"] == 50
+
+    def test_measured_generated_dataset_volume_and_extrapolated_bounds(self, tmp_path):
+        """Assert actual measured row counts of a generated dataset (empirical post-generation test)
+
+        extrapolate to >= 100,000 state events and [500,000, 700,000] count+QC for the 90-day horizon.
+        """
+        import polars as pl
+        from yotta_oee.generator.config import FULL_CONFIG, GeneratorProfileConfig
+        from yotta_oee.generator.engine import DataGenerationEngine
+
+        # Generate a 3-day dry run across full 5-line / 30-machine / 20-product topology
+        dry_cfg = GeneratorProfileConfig(
+            profile_name="dry_run_full",
+            num_plants=FULL_CONFIG.num_plants,
+            num_lines=FULL_CONFIG.num_lines,
+            machines_per_line=FULL_CONFIG.machines_per_line,
+            num_products=FULL_CONFIG.num_products,
+            num_days=3,
+            start_date=FULL_CONFIG.start_date,
+            shifts_per_day=FULL_CONFIG.shifts_per_day,
+            shift_duration_hours=FULL_CONFIG.shift_duration_hours,
+            planned_break_minutes=FULL_CONFIG.planned_break_minutes,
+            anomalies_per_type=1,
+            target_events_per_shift_machine=FULL_CONFIG.target_events_per_shift_machine,
+            pulse_interval_sec=FULL_CONFIG.pulse_interval_sec,
+            qc_samples_per_shift_machine=FULL_CONFIG.qc_samples_per_shift_machine,
+        )
+
+        out_dir = tmp_path / "measured_volume_test"
+        engine = DataGenerationEngine(profile="starter", seed=20261022, output_dir=out_dir)
+        engine.config = dry_cfg
+        result = engine.generate_and_export(skip_anomalies=False)
+
+        # Count actual rows directly from generated CSV files on disk (post-generation verification)
+        state_events_df = pl.read_csv(out_dir / "state_events.csv")
+        production_counts_df = pl.read_csv(out_dir / "production_counts.csv")
+        qc_df = pl.read_csv(out_dir / "quality_inspections.csv")
+
+        measured_events = len(state_events_df)
+        measured_counts = len(production_counts_df)
+        measured_qc = len(qc_df)
+        measured_count_plus_qc = measured_counts + measured_qc
+
+        ms_in_sample = dry_cfg.total_machine_shifts  # 30 machines * 9 shifts = 270
+        assert ms_in_sample == 270
+
+        # Assert per-machine-shift measured rates
+        events_per_ms = measured_events / ms_in_sample
+        counts_per_ms = measured_counts / ms_in_sample
+        qc_per_ms = measured_qc / ms_in_sample
+        c_plus_qc_per_ms = measured_count_plus_qc / ms_in_sample
+
+        assert events_per_ms >= 12.35, f"Measured events/ms ({events_per_ms:.2f}) too low to reach 100k at 8100 ms"
+        assert qc_per_ms == 2.0, f"Measured QC/ms ({qc_per_ms:.2f}) must be exactly 2.0"
+
+        # Extrapolate to 90 days (8,100 machine-shifts = 30x the 270 sample)
+        extrapolated_events = measured_events * 30
+        extrapolated_count_plus_qc = measured_count_plus_qc * 30
+
+        # Enforce required bounds on actual empirical extrapolation
+        assert extrapolated_events >= 100_000, (
+            f"Extrapolated state events ({extrapolated_events:,}) must be >= 100,000"
+        )
+        assert 500_000 <= extrapolated_count_plus_qc <= 700_000, (
+            f"Extrapolated count+QC ({extrapolated_count_plus_qc:,}) must be in [500,000, 700,000]"
+        )
+

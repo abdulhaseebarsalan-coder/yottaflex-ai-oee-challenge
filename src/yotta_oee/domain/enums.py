@@ -61,6 +61,23 @@ class InspectionType(str, Enum):
     FINAL = "FINAL"
 
 
+class DefectCode(str, Enum):
+    """Categorization of quality inspection defect types."""
+    DIMENSIONAL_OUT_OF_SPEC = "DIMENSIONAL_OUT_OF_SPEC"
+    SURFACE_SCRATCH = "SURFACE_SCRATCH"
+    BURR_CONTAMINATION = "BURR_CONTAMINATION"
+    MATERIAL_VOIDS = "MATERIAL_VOIDS"
+    PACKAGING_DAMAGE = "PACKAGING_DAMAGE"
+    TOOL_MARKING = "TOOL_MARKING"
+
+
+class AggregateStatus(str, Enum):
+    """Operational integrity classification of an OEE shift aggregate."""
+    CLEAN = "CLEAN"
+    FLAGGED = "FLAGGED"
+    ANOMALOUS = "ANOMALOUS"
+
+
 class AnomalyType(str, Enum):
     """The five mandatory challenge edge cases deterministically injected."""
     OVERLAPPING_STATE = "OVERLAPPING_STATE"                   # EC-01
@@ -71,18 +88,23 @@ class AnomalyType(str, Enum):
 
 
 class ValidationRuleId(str, Enum):
-    """Unique identifiers for the 15 system integrity validation rules."""
+    """Unique identifiers for system integrity validation rules."""
     VAL_REL_001 = "VAL-REL-001"    # PK uniqueness
     VAL_REL_002 = "VAL-REL-002"    # FK referential integrity
     VAL_REL_003 = "VAL-REL-003"    # Enum domain enforcement
+    VAL_REL_004 = "VAL-REL-004"    # Mandatory required fields & nullability
     VAL_TIME_001 = "VAL-TIME-001"  # Chronological monotonicity
     VAL_TIME_002 = "VAL-TIME-002"  # State mutual exclusivity / overlaps
     VAL_TIME_003 = "VAL-TIME-003"  # Break collision with unplanned downtime
+    VAL_TIME_004 = "VAL-TIME-004"  # Duration consistency (duration = end - start)
+    VAL_TIME_005 = "VAL-TIME-005"  # Shift time accounting (durations sum to shift duration)
+    VAL_STATE_001 = "VAL-STATE-001"# State transition lifecycle
     VAL_COUNT_001 = "VAL-COUNT-001" # Monotonic count progression
     VAL_COUNT_002 = "VAL-COUNT-002" # Running state authorization for counts
+    VAL_COUNT_003 = "VAL-COUNT-003" # Correction reference validity
     VAL_QUAL_001 = "VAL-QUAL-001"  # Quality mass-balance & scrap <= inspected
-    VAL_PERF_001 = "VAL-PERF-001"  # Standard cycle time adherence
-    VAL_PERF_002 = "VAL-PERF-002"  # Performance ratio plausibility
+    VAL_PERF_001 = "VAL-PERF-001"  # Standard cycle time adherence (order vs master)
+    VAL_PERF_002 = "VAL-PERF-002"  # Performance ratio plausibility (P > 1.20)
     VAL_OEE_001 = "VAL-OEE-001"    # OEE mathematical consistency (A * P * Q)
     VAL_OEE_002 = "VAL-OEE-002"    # Direct mass-energy equivalence check
     VAL_OEE_003 = "VAL-OEE-003"    # Metric range sanity
@@ -94,3 +116,4 @@ class Severity(str, Enum):
     ERROR = "ERROR"
     WARNING = "WARNING"
     INFO = "INFO"
+

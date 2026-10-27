@@ -165,6 +165,35 @@ def calculate_quality(
     return raw_quality
 
 
+def calculate_sampled_quality(
+    inspected_qty: int,
+    passed_qty: int,
+    clamp: bool = True,
+) -> float:
+    """Calculate Quality ratio (Q) based on lot sampling audits.
+
+    In discrete manufacturing, quality control performs statistical sampling
+    (e.g. AQL audits). Quality is defined as the conforming sample yield:
+    Q = passed_qty / inspected_qty.
+
+    Args:
+        inspected_qty: Total units physically sampled and audited.
+        passed_qty: Audited units conforming to specifications.
+        clamp: If True, clamps ratio to [0.0, 1.0].
+
+    Returns:
+        Quality ratio as a float. Returns 1.0 if inspected_qty is 0.
+    """
+    if inspected_qty <= 0:
+        return 1.0
+
+    raw_yield = float(passed_qty) / float(inspected_qty)
+    if clamp:
+        return max(0.0, min(1.0, raw_yield))
+    return raw_yield
+
+
+
 def calculate_oee(
     availability: float,
     performance: float,

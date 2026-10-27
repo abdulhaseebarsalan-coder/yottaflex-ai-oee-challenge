@@ -4,6 +4,7 @@ from typing import Dict, List, Set, Tuple
 import polars as pl
 
 from yotta_oee.domain.enums import (
+    DefectCode,
     DowntimeCategory,
     InspectionType,
     LineType,
@@ -118,7 +119,7 @@ class FKReferentialIntegrityRule(BaseValidationRule):
             ("quality_inspections.csv", "order_id", "production_orders.csv", "order_id", False),
             ("quality_inspections.csv", "machine_id", "machines.csv", "machine_id", False),
             ("quality_inspections.csv", "shift_id", "shifts.csv", "shift_id", False),
-            ("quality_inspections.csv", "defect_code", "downtime_reasons.csv", "reason_code", True),
+            # Note: defect_code has its own enum domain and is no longer an FK to downtime_reasons
         ]
 
         for child_table, fk_col, parent_table, parent_pk, is_nullable in fk_definitions:
@@ -172,16 +173,17 @@ class EnumDomainRule(BaseValidationRule):
         findings: List[RuleFinding] = []
 
         enum_checks = [
-            ("lines.csv", "line_type", {e.value for e in LineType}),
-            ("machines.csv", "criticality", {e.value for e in MachineCriticality}),
-            ("shifts.csv", "shift_code", {e.value for e in ShiftCode}),
-            ("production_orders.csv", "status", {e.value for e in OrderStatus}),
-            ("state_events.csv", "state", {e.value for e in MachineState}),
-            ("downtime_reasons.csv", "category", {e.value for e in DowntimeCategory}),
-            ("quality_inspections.csv", "inspection_type", {e.value for e in InspectionType}),
+            ("lines.csv", "line_type", {e.value for e in LineType}, False),
+            ("machines.csv", "criticality", {e.value for e in MachineCriticality}, False),
+            ("shifts.csv", "shift_code", {e.value for e in ShiftCode}, False),
+            ("production_orders.csv", "status", {e.value for e in OrderStatus}, False),
+            ("state_events.csv", "state", {e.value for e in MachineState}, False),
+            ("downtime_reasons.csv", "category", {e.value for e in DowntimeCategory}, False),
+            ("quality_inspections.csv", "inspection_type", {e.value for e in InspectionType}, False),
+            ("quality_inspections.csv", "defect_code", {e.value for e in DefectCode}, True),
         ]
 
-        for filename, col, allowed_values in enum_checks:
+        for filename, col, allowed_values, is_nullable in enum_checks:
             if filename not in dataset:
                 continue
             df = dataset[filename]
@@ -190,7 +192,11 @@ class EnumDomainRule(BaseValidationRule):
 
             pk_col = TABLE_PKS.get(filename, "id")
             for row in df.iter_rows(named=True):
-                val = str(row.get(col, ""))
+                raw_val = row.get(col)
+                if is_nullable and (raw_val is None or str(raw_val).strip() == ""):
+                    continue
+
+                val = str(raw_val)
                 rec_id = str(row.get(pk_col, "UNKNOWN"))
                 if val not in allowed_values:
                     findings.append(
@@ -205,6 +211,76 @@ class EnumDomainRule(BaseValidationRule):
                             expected_condition=f"Allowed values: {sorted(list(allowed_values))}",
                         )
                     )
+
+        return findings
+
+
+class RequiredFieldsRule(BaseValidationRule):
+    """VAL-REL-004: Mandatory entity attributes must not be null, empty, or whitespace."""
+
+    @property
+    def rule_id(self) -> ValidationRuleId:
+        return ValidationRuleId.VAL_REL_004
+
+    @property
+    def description(self) -> str:
+        return "Validate that all mandatory non-nullable columns across tables are populated."
+
+    def validate(self, dataset: Dict[str, pl.DataFrame]) -> List[RuleFinding]:
+        findings: List[RuleFinding] = []
+
+        mandatory_fields: Dict[str, List[str]] = {
+            "plants.csv": ["plant_id", "name", "timezone", "country"],
+            "lines.csv": ["line_id", "plant_id", "name", "line_type"],
+            "machines.csv": ["machine_id", "line_id", "name", "sequence_order", "criticality"],
+            "products.csv": ["product_id", "sku", "name", "family"],
+            "shifts.csv": ["shift_id", "plant_id", "shift_code", "start_time", "end_time", "planned_break_sec"],
+            "machine_product_standards.csv": ["standard_id", "machine_id", "product_id", "ideal_cycle_time_sec"],
+            "downtime_reasons.csv": ["reason_code", "category", "description", "affects_availability"],
+            "production_orders.csv": ["order_id", "product_id", "line_id", "target_quantity", "scheduled_start", "scheduled_end", "status", "planned_cycle_time_sec"],
+            "state_events.csv": ["event_id", "machine_id", "shift_id", "state", "start_time", "end_time", "duration_sec"],
+            "production_counts.csv": ["count_id", "order_id", "machine_id", "shift_id", "timestamp", "count_delta", "cumulative_count", "is_correction"],
+            "quality_inspections.csv": ["inspection_id", "order_id", "machine_id", "shift_id", "timestamp", "inspection_type", "inspected_qty", "passed_qty", "scrap_qty", "rework_qty"],
+        }
+
+        for filename, cols in mandatory_fields.items():
+            if filename not in dataset:
+                continue
+            df = dataset[filename]
+            pk_col = TABLE_PKS.get(filename, "id")
+
+            for col in cols:
+                if col not in df.columns:
+                    findings.append(
+                        RuleFinding(
+                            rule_id=self.rule_id,
+                            severity=Severity.ERROR,
+                            table_name=filename,
+                            record_id="SCHEMA",
+                            field_name=col,
+                            message=f"Mandatory column '{col}' is missing entirely from {filename}",
+                            observed_value="Column missing",
+                            expected_condition="Column must exist",
+                        )
+                    )
+                    continue
+
+                for row in df.iter_rows(named=True):
+                    val = row.get(col)
+                    rec_id = str(row.get(pk_col, "UNKNOWN"))
+                    if val is None or (isinstance(val, str) and str(val).strip() == ""):
+                        findings.append(
+                            RuleFinding(
+                                rule_id=self.rule_id,
+                                severity=Severity.ERROR,
+                                table_name=filename,
+                                record_id=rec_id,
+                                field_name=col,
+                                message=f"Mandatory field '{col}' is null or blank in {filename} (record {rec_id})",
+                                observed_value="null/empty",
+                                expected_condition="Must be non-null and non-empty",
+                            )
+                        )
 
         return findings
 
@@ -227,7 +303,6 @@ class DeDuplicationRule(BaseValidationRule):
             if not filename.endswith(".csv") or filename == "ground_truth.csv":
                 continue
 
-            pk_col = TABLE_PKS.get(filename, "id")
             dupe_count = len(df) - df.unique().shape[0]
             if dupe_count > 0:
                 findings.append(
@@ -244,3 +319,4 @@ class DeDuplicationRule(BaseValidationRule):
                 )
 
         return findings
+
