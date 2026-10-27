@@ -1,0 +1,54 @@
+{
+  "manifest_name": "YottaFlex OEE Analytics Engine - Source & Attribution Manifest",
+  "version": "1.0.0",
+  "data_provenance": {
+    "is_synthetic": true,
+    "external_data_used": false,
+    "statement": "100% of telemetry, master data, work orders, state transitions, pulse counts, and quality audits were generated synthetically from first-principles domain mathematical models and PRNG algorithms with fixed seeds. No external, customer, confidential, or proprietary industrial datasets were imported, scraped, or utilized."
+  },
+  "standards_and_references": [
+    {
+      "standard": "ISO 22400-2:2014",
+      "title": "Automation systems and integration - Key performance indicators (KPIs) for manufacturing operations management - Part 2: Definitions and descriptions",
+      "usage": "Inspiration for OEE element decomposition, Planned Production Time (PPT), Operating Time, and Quality conforming unit accounting."
+    },
+    {
+      "standard": "SEMI E10-0304",
+      "title": "Standard for Definition and Measurement of Equipment Reliability, Availability, and Maintainability (RAM)",
+      "usage": "Taxonomy of operational machine states (Running, Unplanned Downtime, Planned Downtime, Starved, Blocked, Off) and state mutual exclusivity."
+    },
+    {
+      "standard": "Nakajima TPM Framework (1988)",
+      "author": "Seiichi Nakajima",
+      "title": "Introduction to TPM: Total Productive Maintenance (Productivity Press)",
+      "usage": "Canonical mathematical foundation for Overall Equipment Effectiveness: OEE = Availability * Performance * Quality."
+    }
+  ],
+  "licensing": {
+    "software_license": "MIT License",
+    "dataset_license": "Creative Commons Zero v1.0 Universal (CC0 1.0) Public Domain Dedication",
+    "third_party_dependencies": [
+      {
+        "library": "polars",
+        "license": "MIT"
+      },
+      {
+        "library": "pydantic",
+        "license": "MIT"
+      },
+      {
+        "library": "click",
+        "license": "BSD-3-Clause"
+      },
+      {
+        "library": "rich",
+        "license": "MIT"
+      },
+      {
+        "library": "pytest",
+        "license": "MIT"
+      }
+    ],
+    "notes": "All runtime and development dependencies utilize permissive OSI-approved open-source licenses (MIT and BSD-3-Clause). No copyleft or viral licenses are incorporated."
+  }
+}
