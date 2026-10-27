@@ -15,6 +15,7 @@ from yotta_oee.exporter.engine import DatasetExporter
 from yotta_oee.generator.engine import DataGenerationEngine
 from yotta_oee.validator.base import RuleFinding
 from yotta_oee.validator.engine import ValidationEngine
+from yotta_oee.verifier.engine import VerificationRunner
 
 console = Console(safe_box=True)
 
@@ -391,6 +392,81 @@ def export_command(input_dir: Path, output_dir: Optional[Path], formats: str) ->
 
     console.print(f"[bold green][SUCCESS][/bold green] Export completed to: [bold]{manifest['output_dir']}[/bold]\n")
     console.print(f"Generated [cyan]{len(manifest['files_generated'])}[/cyan] artifact files across [cyan]{len(manifest['tables'])}[/cyan] domain tables.\n")
+
+
+# ---------------------------------------------------------------------------
+# 6. Two-Process Verification & Reproducibility Command
+# ---------------------------------------------------------------------------
+@main.command("verify")
+@click.option(
+    "--profile",
+    "-p",
+    type=click.Choice(["starter", "full"], case_sensitive=False),
+    default="starter",
+    show_default=True,
+    help="Generation profile to verify: 'starter' (default) or 'full'.",
+)
+@click.option(
+    "--seed",
+    "-s",
+    type=int,
+    default=20261022,
+    show_default=True,
+    help="Random seed for deterministic multi-process verification.",
+)
+@click.option(
+    "--reports-dir",
+    "-r",
+    type=click.Path(file_okay=False, dir_okay=True, path_type=Path),
+    default=Path("reports"),
+    show_default=True,
+    help="Directory to write reproducibility and validation summary reports.",
+)
+def verify_command(profile: str, seed: int, reports_dir: Path) -> None:
+    """Run two-process bitwise reproducibility verification and generate deterministic reports."""
+    import sys
+    console.print(
+        Panel.fit(
+            f"[bold cyan]YottaFlex Reproducibility & Validation Verifier[/bold cyan]\n"
+            f"Profile: [yellow]{profile.upper()}[/yellow] | Seed: [green]{seed}[/green] | Reports: [dim]{reports_dir}[/dim]",
+            border_style="cyan",
+        )
+    )
+
+    verifier = VerificationRunner(profile=profile, seed=seed, reports_dir=reports_dir)
+    with console.status(f"[bold green]Running two-process verification for {profile} profile...", spinner="dots"):
+        result = verifier.run_two_process_verification()
+
+    repro = result["reproducibility_report"]
+    all_matched = repro["all_matched"]
+
+    # Display Reproducibility Table
+    table = Table(title=f"Bitwise Reproducibility Comparison ({profile.upper()} Profile)", border_style="dim")
+    table.add_column("File / Artifact", style="cyan")
+    table.add_column("Process 1 SHA-256", justify="left", style="dim")
+    table.add_column("Process 2 SHA-256", justify="left", style="dim")
+    table.add_column("Status", justify="center", style="bold")
+
+    for comp in repro["comparisons"]:
+        status_str = "[green]MATCH[/green]" if comp["match"] else "[red]MISMATCH[/red]"
+        table.add_row(
+            comp["file_name"],
+            comp["process_1_sha256"][:16] + "...",
+            comp["process_2_sha256"][:16] + "...",
+            status_str,
+        )
+
+    console.print(table)
+
+    verdict_color = "green" if all_matched else "red"
+    console.print(f"\n[{verdict_color}][VERDICT] Two-Process Reproducibility: {repro['status']} ({repro['total_files_compared']} files evaluated)[/{verdict_color}]")
+    console.print("Reports written to:")
+    console.print(f"  - [bold]{result['reproducibility_file']}[/bold]")
+    console.print(f"  - [bold]{result['validation_json_file']}[/bold]")
+    console.print(f"  - [bold]{result['validation_md_file']}[/bold]\n")
+
+    if not all_matched:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
