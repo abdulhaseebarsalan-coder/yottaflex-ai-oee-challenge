@@ -3,6 +3,9 @@
     "plant_id": "PLANT-01",
     "name": "Apex Advanced Manufacturing Facility 1",
     "timezone": "UTC",
-    "country": "USA"
+    "country": "USA",
+    "effective_from": "2026-01-01T00:00:00Z",
+    "effective_to": null,
+    "status": "ACTIVE"
   }
 ]

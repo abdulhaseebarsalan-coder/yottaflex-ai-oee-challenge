@@ -1,0 +1,11 @@
+reason_code,category,description,affects_availability
+DT-CHANGEOVER-SETUP,CHANGEOVER,Product Die / Fixture Swap and Tooling Calibration,True
+DT-PLANNED-BREAK,PLANNED,Scheduled Shift Rest / Meal Break,False
+DT-PLANNED-MAINT,PLANNED,Scheduled Autonomous / Preventative Maintenance,False
+DT-STOP-BLOCKED,LINE_STOP,Downstream Line Blockage / Output Buffer Saturation,True
+DT-STOP-STARVED,LINE_STOP,Material Starvation from Upstream Feeder Buffer,True
+DT-UNPLANNED-ELEC,UNPLANNED,Electrical Component / Sensor Signal Failure,True
+DT-UNPLANNED-JAM,UNPLANNED,Mechanical Jam / Material Feed Obstruction,True
+DT-UNPLANNED-MICRO,UNPLANNED,Transient Equipment Micro-Stop / Minor Feed Jam (< 5 min),True
+DT-UNPLANNED-OP,UNPLANNED,Unscheduled Operator Absence or Safety Interlock Trip,True
+DT-UNPLANNED-TOOL,UNPLANNED,Spindle / Cutting Tool Fracture or Excessive Wear,True

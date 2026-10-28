@@ -32,6 +32,14 @@ class OrderStatus(str, Enum):
     CANCELLED = "CANCELLED"
 
 
+class EntityStatus(str, Enum):
+    """Lifecycle operating status of master data entities."""
+    ACTIVE = "ACTIVE"
+    PLANNED = "PLANNED"
+    MAINTENANCE = "MAINTENANCE"
+    RETIRED = "RETIRED"
+
+
 class MachineState(str, Enum):
     """Physical operational state of an individual machine.
     
@@ -109,6 +117,8 @@ class ValidationRuleId(str, Enum):
     VAL_OEE_002 = "VAL-OEE-002"    # Direct mass-energy equivalence check
     VAL_OEE_003 = "VAL-OEE-003"    # Metric range sanity
     VAL_DUP_001 = "VAL-DUP-001"    # Exact record de-duplication
+    VAL_DATE_001 = "VAL-DATE-001"  # Master entity effective date boundary adherence
+    VAL_ORD_001 = "VAL-ORD-001"    # Order lifecycle integrity (cancelled orders have no counts/inspections; in-progress follows completed)
 
 
 class Severity(str, Enum):

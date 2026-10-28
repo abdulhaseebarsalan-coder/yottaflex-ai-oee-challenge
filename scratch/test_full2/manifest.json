@@ -1,0 +1,33 @@
+{
+  "profile": "full",
+  "seed": 20261022,
+  "row_counts": {
+    "plants.csv": 1,
+    "lines.csv": 5,
+    "machines.csv": 30,
+    "products.csv": 20,
+    "shifts.csv": 270,
+    "machine_product_standards.csv": 600,
+    "downtime_reasons.csv": 10,
+    "production_orders.csv": 690,
+    "state_events.csv": 120576,
+    "production_counts.csv": 588938,
+    "quality_inspections.csv": 16164,
+    "ground_truth/ground_truth.csv": 50
+  },
+  "checksums_sha256": {
+    "plants.csv": "04b83498734f4ea50ac9bc9b57b05f9cb3c34f9552fa331a30ddf50289a5bbee",
+    "lines.csv": "7d32975cdd919af45f8ecd1c8b496e2ab67be6c809379bed3dd6d1e6ee41db2e",
+    "machines.csv": "38d3a7cbe029239f954a416f6007f14afdaf0b25ee1f0c82ef29ba23dc4912f5",
+    "products.csv": "e0728076654b3af16b854825661c63fa43fd2c5879bc19c80e27ff3deab4bd74",
+    "shifts.csv": "4bc37ff46db9d2b39e0b51f66bc8a518a0c35d72195b452bc76145af9c3d7e49",
+    "machine_product_standards.csv": "e373c6ac6fd853a85d3abb3b1915cd48a13fdf605cf7eaab103410321de529ef",
+    "downtime_reasons.csv": "8553b6df8eeba3edb52eb903b002572aa087db3dd16ab9d86f3ebd77db36a58a",
+    "production_orders.csv": "9ccfc2b262a976630cffec47c2d3ec3f2edc86ba7bf267febed8be0885c5f015",
+    "state_events.csv": "66ae140fbc83ecb00ed9e9b01f9b95f7bbfeeea1544cbb437cc175948cd550cc",
+    "production_counts.csv": "d8f3abc71252e23c8d6a3caa3a7bcffe7c1542730893626410c4cbb25ab0fa32",
+    "quality_inspections.csv": "5dc042fc4a9ccd9e8b8c0a0862dcdda971c01d8013ad39bb0be72f70b6202888",
+    "ground_truth/ground_truth.csv": "cb76a5e7570afce98bd18082818483882099928ef4b0af55dc6b3f70fb436d4c",
+    "ground_truth/ground_truth.json": "51c15f037104eba043859b4085a349895aa783909791fa8719f959d8b2890c31"
+  }
+}

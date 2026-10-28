@@ -1,0 +1,888 @@
+{
+  "dataset_profile": "full",
+  "generated_timestamp": "2026-10-28T03:10:20.583169+00:00",
+  "total_aggregates": 8100,
+  "production_orders_status_distribution": {
+    "CANCELLED": {
+      "count": 1,
+      "percentage": 0.14
+    },
+    "COMPLETED": {
+      "count": 687,
+      "percentage": 99.57
+    },
+    "IN_PROGRESS": {
+      "count": 2,
+      "percentage": 0.29
+    }
+  },
+  "state_mix": {
+    "RUNNING": {
+      "count": 62278,
+      "count_pct": 51.65,
+      "total_duration_sec": 190977541,
+      "duration_hours": 53049.3,
+      "duration_pct": 81.86
+    },
+    "PLANNED_DOWNTIME": {
+      "count": 24300,
+      "count_pct": 20.15,
+      "total_duration_sec": 29163600,
+      "duration_hours": 8101.0,
+      "duration_pct": 12.5
+    },
+    "UNPLANNED_DOWNTIME": {
+      "count": 19468,
+      "count_pct": 16.15,
+      "total_duration_sec": 4790269,
+      "duration_hours": 1330.6,
+      "duration_pct": 2.05
+    },
+    "STARVED": {
+      "count": 5992,
+      "count_pct": 4.97,
+      "total_duration_sec": 1970358,
+      "duration_hours": 547.3,
+      "duration_pct": 0.84
+    },
+    "BLOCKED": {
+      "count": 4428,
+      "count_pct": 3.67,
+      "total_duration_sec": 1456852,
+      "duration_hours": 404.7,
+      "duration_pct": 0.62
+    },
+    "CHANGEOVER": {
+      "count": 4110,
+      "count_pct": 3.41,
+      "total_duration_sec": 4948380,
+      "duration_hours": 1374.5,
+      "duration_pct": 2.12
+    }
+  },
+  "downtime_by_reason": {
+    "DT-PLANNED-BREAK": {
+      "count": 24300,
+      "count_pct": 41.68,
+      "total_duration_sec": 29163600,
+      "duration_hours": 8101.0,
+      "duration_pct": 68.9
+    },
+    "DT-UNPLANNED-MICRO": {
+      "count": 7497,
+      "count_pct": 12.86,
+      "total_duration_sec": 842970,
+      "duration_hours": 234.2,
+      "duration_pct": 1.99
+    },
+    "DT-STOP-STARVED": {
+      "count": 5992,
+      "count_pct": 10.28,
+      "total_duration_sec": 1970358,
+      "duration_hours": 547.3,
+      "duration_pct": 4.65
+    },
+    "DT-STOP-BLOCKED": {
+      "count": 4428,
+      "count_pct": 7.6,
+      "total_duration_sec": 1456852,
+      "duration_hours": 404.7,
+      "duration_pct": 3.44
+    },
+    "DT-CHANGEOVER-SETUP": {
+      "count": 4110,
+      "count_pct": 7.05,
+      "total_duration_sec": 4948380,
+      "duration_hours": 1374.5,
+      "duration_pct": 11.69
+    },
+    "DT-UNPLANNED-TOOL": {
+      "count": 4029,
+      "count_pct": 6.91,
+      "total_duration_sec": 1325382,
+      "duration_hours": 368.2,
+      "duration_pct": 3.13
+    },
+    "DT-UNPLANNED-JAM": {
+      "count": 3987,
+      "count_pct": 6.84,
+      "total_duration_sec": 1328056,
+      "duration_hours": 368.9,
+      "duration_pct": 3.14
+    },
+    "DT-UNPLANNED-ELEC": {
+      "count": 3955,
+      "count_pct": 6.78,
+      "total_duration_sec": 1293861,
+      "duration_hours": 359.4,
+      "duration_pct": 3.06
+    }
+  },
+  "micro_stop_scenarios": {
+    "count": 7497,
+    "total_duration_sec": 842970,
+    "stats_duration_sec": {
+      "mean": 112.441,
+      "std": 41.9991,
+      "min": 45,
+      "p25": 78,
+      "median": 112,
+      "p75": 146,
+      "max": 1055
+    },
+    "examples": [
+      {
+        "event_id": "EVT-MCH-LINE-01-01-000008",
+        "machine_id": "MCH-LINE-01-01",
+        "shift_id": "SHIFT-2026-01-01-A",
+        "order_id": "PO-2026-000001",
+        "state": "UNPLANNED_DOWNTIME",
+        "start_time": "2026-01-01T09:44:42Z",
+        "end_time": "2026-01-01T09:46:15Z",
+        "duration_sec": "93",
+        "reason_code": "DT-UNPLANNED-MICRO"
+      },
+      {
+        "event_id": "EVT-MCH-LINE-01-01-000016",
+        "machine_id": "MCH-LINE-01-01",
+        "shift_id": "SHIFT-2026-01-01-A",
+        "order_id": "PO-2026-000001",
+        "state": "UNPLANNED_DOWNTIME",
+        "start_time": "2026-01-01T12:54:02Z",
+        "end_time": "2026-01-01T12:55:28Z",
+        "duration_sec": "86",
+        "reason_code": "DT-UNPLANNED-MICRO"
+      },
+      {
+        "event_id": "EVT-MCH-LINE-01-01-000060",
+        "machine_id": "MCH-LINE-01-01",
+        "shift_id": "SHIFT-2026-01-02-C",
+        "order_id": "PO-2026-000004",
+        "state": "UNPLANNED_DOWNTIME",
+        "start_time": "2026-01-02T23:25:57Z",
+        "end_time": "2026-01-02T23:27:47Z",
+        "duration_sec": "110",
+        "reason_code": "DT-UNPLANNED-MICRO"
+      }
+    ]
+  },
+  "changeover_scenarios": {
+    "count": 4110,
+    "total_duration_sec": 4948380,
+    "stats_duration_sec": {
+      "mean": 1203.9854,
+      "std": 188.7853,
+      "min": 900,
+      "p25": 1020.0,
+      "median": 1200.0,
+      "p75": 1380.0,
+      "max": 1500
+    },
+    "examples": [
+      {
+        "event_id": "EVT-MCH-LINE-01-01-000036",
+        "machine_id": "MCH-LINE-01-01",
+        "shift_id": "SHIFT-2026-01-02-A",
+        "order_id": "PO-2026-000002",
+        "state": "CHANGEOVER",
+        "start_time": "2026-01-02T06:00:00Z",
+        "end_time": "2026-01-02T06:19:00Z",
+        "duration_sec": "1140",
+        "reason_code": "DT-CHANGEOVER-SETUP"
+      },
+      {
+        "event_id": "EVT-MCH-LINE-01-01-000044",
+        "machine_id": "MCH-LINE-01-01",
+        "shift_id": "SHIFT-2026-01-02-B",
+        "order_id": "PO-2026-000003",
+        "state": "CHANGEOVER",
+        "start_time": "2026-01-02T14:00:00Z",
+        "end_time": "2026-01-02T14:16:00Z",
+        "duration_sec": "960",
+        "reason_code": "DT-CHANGEOVER-SETUP"
+      },
+      {
+        "event_id": "EVT-MCH-LINE-01-01-000056",
+        "machine_id": "MCH-LINE-01-01",
+        "shift_id": "SHIFT-2026-01-02-C",
+        "order_id": "PO-2026-000004",
+        "state": "CHANGEOVER",
+        "start_time": "2026-01-02T22:00:00Z",
+        "end_time": "2026-01-02T22:22:00Z",
+        "duration_sec": "1320",
+        "reason_code": "DT-CHANGEOVER-SETUP"
+      }
+    ]
+  },
+  "planned_break_scenarios": {
+    "total_shifts": 270,
+    "total_breaks": 24300,
+    "breaks_per_shift": 90.0,
+    "mean_duration_sec": 1200.1,
+    "examples": [
+      {
+        "event_id": "EVT-MCH-LINE-01-01-000002",
+        "machine_id": "MCH-LINE-01-01",
+        "shift_id": "SHIFT-2026-01-01-A",
+        "order_id": "",
+        "state": "PLANNED_DOWNTIME",
+        "start_time": "2026-01-01T08:00:00Z",
+        "end_time": "2026-01-01T08:15:00Z",
+        "duration_sec": "900",
+        "reason_code": "DT-PLANNED-BREAK"
+      },
+      {
+        "event_id": "EVT-MCH-LINE-01-01-000010",
+        "machine_id": "MCH-LINE-01-01",
+        "shift_id": "SHIFT-2026-01-01-A",
+        "order_id": "",
+        "state": "PLANNED_DOWNTIME",
+        "start_time": "2026-01-01T10:00:00Z",
+        "end_time": "2026-01-01T10:30:00Z",
+        "duration_sec": "1800",
+        "reason_code": "DT-PLANNED-BREAK"
+      },
+      {
+        "event_id": "EVT-MCH-LINE-01-01-000014",
+        "machine_id": "MCH-LINE-01-01",
+        "shift_id": "SHIFT-2026-01-01-A",
+        "order_id": "",
+        "state": "PLANNED_DOWNTIME",
+        "start_time": "2026-01-01T12:00:00Z",
+        "end_time": "2026-01-01T12:15:00Z",
+        "duration_sec": "900",
+        "reason_code": "DT-PLANNED-BREAK"
+      }
+    ]
+  },
+  "count_corrections_scenarios": {
+    "total_production_counts": 588938,
+    "negative_delta_corrections_count": 2932,
+    "corrections_with_ref_link": 2922,
+    "correction_pct": 0.4978,
+    "examples": [
+      {
+        "correction_record": {
+          "count_id": "CNT-PO-2026-000001-000077",
+          "order_id": "PO-2026-000001",
+          "machine_id": "MCH-LINE-01-06",
+          "shift_id": "SHIFT-2026-01-01-A",
+          "timestamp": "2026-01-01T07:17:35Z",
+          "count_delta": "-7",
+          "cumulative_count": "197",
+          "is_correction": "True",
+          "correction_ref_id": "CNT-PO-2026-000001-000076"
+        },
+        "original_record": {
+          "count_id": "CNT-PO-2026-000001-000076",
+          "order_id": "PO-2026-000001",
+          "machine_id": "MCH-LINE-01-06",
+          "shift_id": "SHIFT-2026-01-01-A",
+          "timestamp": "2026-01-01T07:17:30Z",
+          "count_delta": "14",
+          "cumulative_count": "204",
+          "is_correction": "False",
+          "correction_ref_id": ""
+        }
+      },
+      {
+        "correction_record": {
+          "count_id": "CNT-PO-2026-000001-000145",
+          "order_id": "PO-2026-000001",
+          "machine_id": "MCH-LINE-01-03",
+          "shift_id": "SHIFT-2026-01-01-A",
+          "timestamp": "2026-01-01T08:30:35Z",
+          "count_delta": "-4",
+          "cumulative_count": "392",
+          "is_correction": "True",
+          "correction_ref_id": "CNT-PO-2026-000001-000144"
+        },
+        "original_record": {
+          "count_id": "CNT-PO-2026-000001-000144",
+          "order_id": "PO-2026-000001",
+          "machine_id": "MCH-LINE-01-03",
+          "shift_id": "SHIFT-2026-01-01-A",
+          "timestamp": "2026-01-01T08:30:30Z",
+          "count_delta": "16",
+          "cumulative_count": "396",
+          "is_correction": "False",
+          "correction_ref_id": ""
+        }
+      },
+      {
+        "correction_record": {
+          "count_id": "CNT-PO-2026-000001-000470",
+          "order_id": "PO-2026-000001",
+          "machine_id": "MCH-LINE-01-01",
+          "shift_id": "SHIFT-2026-01-01-B",
+          "timestamp": "2026-01-01T15:38:15Z",
+          "count_delta": "-4",
+          "cumulative_count": "3876",
+          "is_correction": "True",
+          "correction_ref_id": "CNT-PO-2026-000001-000469"
+        },
+        "original_record": {
+          "count_id": "CNT-PO-2026-000001-000469",
+          "order_id": "PO-2026-000001",
+          "machine_id": "MCH-LINE-01-01",
+          "shift_id": "SHIFT-2026-01-01-B",
+          "timestamp": "2026-01-01T15:38:10Z",
+          "count_delta": "45",
+          "cumulative_count": "3880",
+          "is_correction": "False",
+          "correction_ref_id": ""
+        }
+      }
+    ]
+  },
+  "scrap_rework_by_product": {
+    "PRD-0001": {
+      "inspected_qty": 29360,
+      "passed_qty": 28086,
+      "scrap_qty": 824,
+      "rework_qty": 450,
+      "scrap_rate_pct": 2.807,
+      "rework_rate_pct": 1.533,
+      "defect_rate_pct": 4.339,
+      "quality_yield_pct": 97.193
+    },
+    "PRD-0002": {
+      "inspected_qty": 20640,
+      "passed_qty": 19919,
+      "scrap_qty": 497,
+      "rework_qty": 269,
+      "scrap_rate_pct": 2.408,
+      "rework_rate_pct": 1.303,
+      "defect_rate_pct": 3.711,
+      "quality_yield_pct": 97.592
+    },
+    "PRD-0003": {
+      "inspected_qty": 26300,
+      "passed_qty": 25599,
+      "scrap_qty": 506,
+      "rework_qty": 260,
+      "scrap_rate_pct": 1.924,
+      "rework_rate_pct": 0.989,
+      "defect_rate_pct": 2.913,
+      "quality_yield_pct": 98.076
+    },
+    "PRD-0004": {
+      "inspected_qty": 11320,
+      "passed_qty": 10794,
+      "scrap_qty": 419,
+      "rework_qty": 171,
+      "scrap_rate_pct": 3.701,
+      "rework_rate_pct": 1.511,
+      "defect_rate_pct": 5.212,
+      "quality_yield_pct": 96.299
+    },
+    "PRD-0005": {
+      "inspected_qty": 25640,
+      "passed_qty": 24662,
+      "scrap_qty": 627,
+      "rework_qty": 351,
+      "scrap_rate_pct": 2.445,
+      "rework_rate_pct": 1.369,
+      "defect_rate_pct": 3.814,
+      "quality_yield_pct": 97.555
+    },
+    "PRD-0006": {
+      "inspected_qty": 25080,
+      "passed_qty": 24358,
+      "scrap_qty": 459,
+      "rework_qty": 263,
+      "scrap_rate_pct": 1.83,
+      "rework_rate_pct": 1.049,
+      "defect_rate_pct": 2.879,
+      "quality_yield_pct": 98.17
+    },
+    "PRD-0007": {
+      "inspected_qty": 26480,
+      "passed_qty": 25134,
+      "scrap_qty": 911,
+      "rework_qty": 435,
+      "scrap_rate_pct": 3.44,
+      "rework_rate_pct": 1.643,
+      "defect_rate_pct": 5.083,
+      "quality_yield_pct": 96.56
+    },
+    "PRD-0008": {
+      "inspected_qty": 23400,
+      "passed_qty": 22407,
+      "scrap_qty": 695,
+      "rework_qty": 333,
+      "scrap_rate_pct": 2.97,
+      "rework_rate_pct": 1.423,
+      "defect_rate_pct": 4.393,
+      "quality_yield_pct": 97.03
+    },
+    "PRD-0009": {
+      "inspected_qty": 23320,
+      "passed_qty": 22543,
+      "scrap_qty": 494,
+      "rework_qty": 283,
+      "scrap_rate_pct": 2.118,
+      "rework_rate_pct": 1.214,
+      "defect_rate_pct": 3.332,
+      "quality_yield_pct": 97.882
+    },
+    "PRD-0010": {
+      "inspected_qty": 23660,
+      "passed_qty": 23078,
+      "scrap_qty": 419,
+      "rework_qty": 197,
+      "scrap_rate_pct": 1.771,
+      "rework_rate_pct": 0.833,
+      "defect_rate_pct": 2.604,
+      "quality_yield_pct": 98.229
+    },
+    "PRD-0011": {
+      "inspected_qty": 25440,
+      "passed_qty": 24325,
+      "scrap_qty": 816,
+      "rework_qty": 397,
+      "scrap_rate_pct": 3.208,
+      "rework_rate_pct": 1.561,
+      "defect_rate_pct": 4.768,
+      "quality_yield_pct": 96.792
+    },
+    "PRD-0012": {
+      "inspected_qty": 28740,
+      "passed_qty": 27733,
+      "scrap_qty": 653,
+      "rework_qty": 354,
+      "scrap_rate_pct": 2.272,
+      "rework_rate_pct": 1.232,
+      "defect_rate_pct": 3.504,
+      "quality_yield_pct": 97.728
+    },
+    "PRD-0013": {
+      "inspected_qty": 26300,
+      "passed_qty": 25623,
+      "scrap_qty": 433,
+      "rework_qty": 244,
+      "scrap_rate_pct": 1.646,
+      "rework_rate_pct": 0.928,
+      "defect_rate_pct": 2.574,
+      "quality_yield_pct": 98.354
+    },
+    "PRD-0014": {
+      "inspected_qty": 28160,
+      "passed_qty": 26773,
+      "scrap_qty": 980,
+      "rework_qty": 468,
+      "scrap_rate_pct": 3.48,
+      "rework_rate_pct": 1.662,
+      "defect_rate_pct": 5.142,
+      "quality_yield_pct": 96.52
+    },
+    "PRD-0015": {
+      "inspected_qty": 25180,
+      "passed_qty": 24163,
+      "scrap_qty": 648,
+      "rework_qty": 369,
+      "scrap_rate_pct": 2.573,
+      "rework_rate_pct": 1.465,
+      "defect_rate_pct": 4.039,
+      "quality_yield_pct": 97.427
+    },
+    "PRD-0016": {
+      "inspected_qty": 26500,
+      "passed_qty": 25663,
+      "scrap_qty": 532,
+      "rework_qty": 305,
+      "scrap_rate_pct": 2.008,
+      "rework_rate_pct": 1.151,
+      "defect_rate_pct": 3.158,
+      "quality_yield_pct": 97.992
+    },
+    "PRD-0017": {
+      "inspected_qty": 26780,
+      "passed_qty": 25392,
+      "scrap_qty": 978,
+      "rework_qty": 473,
+      "scrap_rate_pct": 3.652,
+      "rework_rate_pct": 1.766,
+      "defect_rate_pct": 5.418,
+      "quality_yield_pct": 96.348
+    },
+    "PRD-0018": {
+      "inspected_qty": 26120,
+      "passed_qty": 25082,
+      "scrap_qty": 660,
+      "rework_qty": 378,
+      "scrap_rate_pct": 2.527,
+      "rework_rate_pct": 1.447,
+      "defect_rate_pct": 3.974,
+      "quality_yield_pct": 97.473
+    },
+    "PRD-0019": {
+      "inspected_qty": 21820,
+      "passed_qty": 21027,
+      "scrap_qty": 563,
+      "rework_qty": 264,
+      "scrap_rate_pct": 2.58,
+      "rework_rate_pct": 1.21,
+      "defect_rate_pct": 3.79,
+      "quality_yield_pct": 97.42
+    },
+    "PRD-0020": {
+      "inspected_qty": 15760,
+      "passed_qty": 15368,
+      "scrap_qty": 239,
+      "rework_qty": 153,
+      "scrap_rate_pct": 1.516,
+      "rework_rate_pct": 0.971,
+      "defect_rate_pct": 2.487,
+      "quality_yield_pct": 98.484
+    }
+  },
+  "post_changeover_multiplier_effect": {
+    "transient_inspected_qty": 129330,
+    "transient_scrap_qty": 4893,
+    "transient_scrap_rate_pct": 3.783,
+    "steady_inspected_qty": 356670,
+    "steady_scrap_qty": 7460,
+    "steady_scrap_rate_pct": 2.092,
+    "multiplier_observed": 1.81
+  },
+  "overall_oee_metrics": {
+    "oee": {
+      "mean": 0.7727,
+      "std": 0.058,
+      "min": 0.0,
+      "p25": 0.744,
+      "median": 0.7749,
+      "p75": 0.8062,
+      "max": 0.8914
+    },
+    "availability": {
+      "mean": 0.9356,
+      "std": 0.0333,
+      "min": 0.8241,
+      "p25": 0.9118,
+      "median": 0.9358,
+      "p75": 0.9609,
+      "max": 1.0
+    },
+    "performance": {
+      "mean": 0.8461,
+      "std": 0.0442,
+      "min": 0.0,
+      "p25": 0.836,
+      "median": 0.8492,
+      "p75": 0.8614,
+      "max": 0.896
+    },
+    "quality": {
+      "mean": 0.9755,
+      "std": 0.0226,
+      "min": 0.8401,
+      "p25": 0.9601,
+      "median": 0.98,
+      "p75": 1.0,
+      "max": 1.0
+    }
+  },
+  "oee_spread_by_shift": {
+    "Shift A": {
+      "mean": 0.7713,
+      "std": 0.0579,
+      "min": 0.0,
+      "p25": 0.743,
+      "median": 0.7733,
+      "p75": 0.8048,
+      "max": 0.8864
+    },
+    "Shift B": {
+      "mean": 0.773,
+      "std": 0.0586,
+      "min": 0.0,
+      "p25": 0.7438,
+      "median": 0.7747,
+      "p75": 0.807,
+      "max": 0.8914
+    },
+    "Shift C": {
+      "mean": 0.7737,
+      "std": 0.0575,
+      "min": 0.0,
+      "p25": 0.7453,
+      "median": 0.7765,
+      "p75": 0.8063,
+      "max": 0.8894
+    }
+  },
+  "oee_spread_by_machine": {
+    "MCH-LINE-01-01": {
+      "mean": 0.7633,
+      "std": 0.0935,
+      "min": 0.0,
+      "p25": 0.7417,
+      "median": 0.7742,
+      "p75": 0.8072,
+      "max": 0.8914
+    },
+    "MCH-LINE-01-02": {
+      "mean": 0.7605,
+      "std": 0.0934,
+      "min": 0.0,
+      "p25": 0.7372,
+      "median": 0.769,
+      "p75": 0.7971,
+      "max": 0.8843
+    },
+    "MCH-LINE-01-03": {
+      "mean": 0.7729,
+      "std": 0.0928,
+      "min": 0.0,
+      "p25": 0.75,
+      "median": 0.7793,
+      "p75": 0.8127,
+      "max": 0.8821
+    },
+    "MCH-LINE-01-04": {
+      "mean": 0.7679,
+      "std": 0.093,
+      "min": 0.0,
+      "p25": 0.7467,
+      "median": 0.7728,
+      "p75": 0.8068,
+      "max": 0.8855
+    },
+    "MCH-LINE-01-05": {
+      "mean": 0.7678,
+      "std": 0.0936,
+      "min": 0.0,
+      "p25": 0.743,
+      "median": 0.7745,
+      "p75": 0.8107,
+      "max": 0.8784
+    },
+    "MCH-LINE-01-06": {
+      "mean": 0.767,
+      "std": 0.0928,
+      "min": 0.0,
+      "p25": 0.7443,
+      "median": 0.7773,
+      "p75": 0.8067,
+      "max": 0.8827
+    },
+    "MCH-LINE-02-01": {
+      "mean": 0.7696,
+      "std": 0.049,
+      "min": 0.6151,
+      "p25": 0.7351,
+      "median": 0.77,
+      "p75": 0.8092,
+      "max": 0.8702
+    },
+    "MCH-LINE-02-02": {
+      "mean": 0.7747,
+      "std": 0.0466,
+      "min": 0.6356,
+      "p25": 0.744,
+      "median": 0.7731,
+      "p75": 0.8106,
+      "max": 0.8833
+    },
+    "MCH-LINE-02-03": {
+      "mean": 0.7751,
+      "std": 0.0486,
+      "min": 0.63,
+      "p25": 0.7422,
+      "median": 0.7779,
+      "p75": 0.8094,
+      "max": 0.8869
+    },
+    "MCH-LINE-02-04": {
+      "mean": 0.7771,
+      "std": 0.0427,
+      "min": 0.6466,
+      "p25": 0.7485,
+      "median": 0.7786,
+      "p75": 0.8069,
+      "max": 0.8753
+    },
+    "MCH-LINE-02-05": {
+      "mean": 0.7729,
+      "std": 0.0455,
+      "min": 0.6487,
+      "p25": 0.7439,
+      "median": 0.772,
+      "p75": 0.8037,
+      "max": 0.8794
+    },
+    "MCH-LINE-02-06": {
+      "mean": 0.7767,
+      "std": 0.0441,
+      "min": 0.6673,
+      "p25": 0.7437,
+      "median": 0.7753,
+      "p75": 0.8102,
+      "max": 0.8897
+    },
+    "MCH-LINE-03-01": {
+      "mean": 0.7663,
+      "std": 0.0467,
+      "min": 0.6183,
+      "p25": 0.7381,
+      "median": 0.7665,
+      "p75": 0.798,
+      "max": 0.8826
+    },
+    "MCH-LINE-03-02": {
+      "mean": 0.7737,
+      "std": 0.0456,
+      "min": 0.6486,
+      "p25": 0.7433,
+      "median": 0.7758,
+      "p75": 0.8042,
+      "max": 0.8894
+    },
+    "MCH-LINE-03-03": {
+      "mean": 0.7763,
+      "std": 0.0439,
+      "min": 0.6579,
+      "p25": 0.7443,
+      "median": 0.7812,
+      "p75": 0.8034,
+      "max": 0.8805
+    },
+    "MCH-LINE-03-04": {
+      "mean": 0.7748,
+      "std": 0.0469,
+      "min": 0.6551,
+      "p25": 0.7404,
+      "median": 0.7755,
+      "p75": 0.8069,
+      "max": 0.8757
+    },
+    "MCH-LINE-03-05": {
+      "mean": 0.7769,
+      "std": 0.0448,
+      "min": 0.6587,
+      "p25": 0.7535,
+      "median": 0.7797,
+      "p75": 0.8036,
+      "max": 0.8894
+    },
+    "MCH-LINE-03-06": {
+      "mean": 0.7798,
+      "std": 0.0449,
+      "min": 0.6719,
+      "p25": 0.7463,
+      "median": 0.7847,
+      "p75": 0.8147,
+      "max": 0.8894
+    },
+    "MCH-LINE-04-01": {
+      "mean": 0.7662,
+      "std": 0.0423,
+      "min": 0.663,
+      "p25": 0.7371,
+      "median": 0.7657,
+      "p75": 0.795,
+      "max": 0.8756
+    },
+    "MCH-LINE-04-02": {
+      "mean": 0.7733,
+      "std": 0.0448,
+      "min": 0.638,
+      "p25": 0.7469,
+      "median": 0.7757,
+      "p75": 0.8023,
+      "max": 0.8812
+    },
+    "MCH-LINE-04-03": {
+      "mean": 0.7715,
+      "std": 0.0409,
+      "min": 0.6603,
+      "p25": 0.7494,
+      "median": 0.7704,
+      "p75": 0.7981,
+      "max": 0.8782
+    },
+    "MCH-LINE-04-04": {
+      "mean": 0.7709,
+      "std": 0.042,
+      "min": 0.625,
+      "p25": 0.7404,
+      "median": 0.7701,
+      "p75": 0.8,
+      "max": 0.8768
+    },
+    "MCH-LINE-04-05": {
+      "mean": 0.7737,
+      "std": 0.0447,
+      "min": 0.6138,
+      "p25": 0.7437,
+      "median": 0.7706,
+      "p75": 0.803,
+      "max": 0.8803
+    },
+    "MCH-LINE-04-06": {
+      "mean": 0.7791,
+      "std": 0.0414,
+      "min": 0.6724,
+      "p25": 0.7483,
+      "median": 0.779,
+      "p75": 0.8094,
+      "max": 0.8788
+    },
+    "MCH-LINE-05-01": {
+      "mean": 0.7668,
+      "std": 0.0437,
+      "min": 0.6355,
+      "p25": 0.7395,
+      "median": 0.7678,
+      "p75": 0.7978,
+      "max": 0.866
+    },
+    "MCH-LINE-05-02": {
+      "mean": 0.7774,
+      "std": 0.0445,
+      "min": 0.6294,
+      "p25": 0.7504,
+      "median": 0.7782,
+      "p75": 0.8082,
+      "max": 0.8805
+    },
+    "MCH-LINE-05-03": {
+      "mean": 0.7784,
+      "std": 0.0439,
+      "min": 0.631,
+      "p25": 0.7494,
+      "median": 0.7816,
+      "p75": 0.8106,
+      "max": 0.8749
+    },
+    "MCH-LINE-05-04": {
+      "mean": 0.7784,
+      "std": 0.046,
+      "min": 0.6046,
+      "p25": 0.7474,
+      "median": 0.7774,
+      "p75": 0.8126,
+      "max": 0.8876
+    },
+    "MCH-LINE-05-05": {
+      "mean": 0.7714,
+      "std": 0.0448,
+      "min": 0.6469,
+      "p25": 0.7411,
+      "median": 0.7781,
+      "p75": 0.7997,
+      "max": 0.8857
+    },
+    "MCH-LINE-05-06": {
+      "mean": 0.7797,
+      "std": 0.046,
+      "min": 0.6571,
+      "p25": 0.7485,
+      "median": 0.7812,
+      "p75": 0.8117,
+      "max": 0.8867
+    }
+  }
+}

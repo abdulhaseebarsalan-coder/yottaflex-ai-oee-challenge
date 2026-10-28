@@ -82,7 +82,7 @@ class DataGenerationEngine:
         # 4. Telemetry Counts & Quality Inspections
         telemetry_gen = TelemetryGenerator(self.config, self.rng)
         counts, inspections = telemetry_gen.generate_counts_and_inspections(
-            state_events, orders, standards
+            state_events, orders, standards, machines=machines
         )
 
         # 5. Anomaly Injection & Ground Truth Logging (bypassed if clean baseline requested)

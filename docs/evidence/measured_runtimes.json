@@ -1,74 +1,93 @@
 [
   {
     "label": "Starter generate",
-    "command": "python -m yotta_oee generate --profile starter --seed 20261022 --output-dir data/starter",
+    "command": "C:\\Python314\\python.exe -m yotta_oee generate --profile starter --seed 20261022 -o data/starter",
     "returncode": 0,
-    "duration_sec": 1.27
+    "duration_sec": 0.81,
+    "stdout_snippet": "+-----------------------------------+\n| YottaFlex OEE Dataset Generator   |\n| Profile: STARTER | Seed: 20261022 |\n+-----------------------------------+\n[SUCCESS] Dataset successfully generated at: data\\starter\n\n                  Generated Tables Summary (Starter Profile)                   \n+--------"
   },
   {
     "label": "Starter validate",
-    "command": "python -m yotta_oee validate -i data/starter -o reports/validation_findings_starter.json",
+    "command": "C:\\Python314\\python.exe -m yotta_oee validate -i data/starter -o reports/validation_findings.json",
     "returncode": 0,
-    "duration_sec": 1.39
+    "duration_sec": 0.84,
+    "stdout_snippet": "+----------------------------------------+\n| YottaFlex Multi-Rule Validation Engine |\n| Target Directory: data\\starter         |\n+----------------------------------------+\n  Validation Execution Summary   \n+-------------------------------+\n| Metric                | Value |\n|-----------------------+-"
   },
   {
     "label": "Starter calculate-oee",
-    "command": "python -m yotta_oee calculate-oee -i data/starter -f reports/validation_findings_starter.json -o data/starter/oee_aggregates.csv",
+    "command": "C:\\Python314\\python.exe -m yotta_oee calculate-oee -i data/starter -f reports/validation_findings.json",
     "returncode": 0,
-    "duration_sec": 1.16
+    "duration_sec": 0.75,
+    "stdout_snippet": "+----------------------------------------------+\n| YottaFlex Shift-Level OEE Calculation Engine |\n| Source Directory: data\\starter               |\n+----------------------------------------------+\nConsumed 10 validator findings for decision-policy application.\n[SUCCESS] Computed 54 OEE aggregates."
+  },
+  {
+    "label": "Starter recompute-oee",
+    "command": "C:\\Python314\\python.exe -m yotta_oee recompute-oee -i data/starter -f reports/validation_findings.json",
+    "returncode": 0,
+    "duration_sec": 0.68,
+    "stdout_snippet": "+-----------------------------------------------------+\n| YottaFlex Independent OEE Recomputation Engine      |\n| Source Directory: data\\starter | Tolerance: 1.0e-06 |\n+-----------------------------------------------------+\n[SUCCESS] All 54 aggregates match independent recomputation within tolerance"
   },
   {
     "label": "Starter benchmark",
-    "command": "python -m yotta_oee benchmark -i data/starter -f reports/validation_findings_starter.json -o reports/benchmark_starter.json",
-    "returncode": 2,
-    "duration_sec": 0.95
+    "command": "C:\\Python314\\python.exe -m yotta_oee benchmark -i data/starter -f reports/validation_findings.json",
+    "returncode": 0,
+    "duration_sec": 0.68,
+    "stdout_snippet": "+---------------------------------------------------+\n| YottaFlex Anomaly Detection Benchmark Evaluator   |\n| Ground Truth: data\\starter\\ground_truth.json      |\n| Findings Report: reports\\validation_findings.json |\n+---------------------------------------------------+\n     Detection Performance Ben"
   },
   {
     "label": "Starter export",
-    "command": "python -m yotta_oee export -i data/starter -o data/starter/exports -f json,sql",
+    "command": "C:\\Python314\\python.exe -m yotta_oee export -i data/starter -o data/starter/exports -f json,sql",
     "returncode": 0,
-    "duration_sec": 1.28
+    "duration_sec": 0.8,
+    "stdout_snippet": "+-------------------------------------------+\n| YottaFlex Dataset Exporter                |\n| Source: data\\starter | Formats: json, sql |\n+-------------------------------------------+\n[SUCCESS] Export completed to: <PORTABLE_PATH> 14 artifact files across"
   },
   {
     "label": "Starter verify",
-    "command": "python -m yotta_oee verify --profile starter --seed 20261022",
+    "command": "C:\\Python314\\python.exe -m yotta_oee verify --profile starter --seed 20261022",
     "returncode": 0,
-    "duration_sec": 8.42
+    "duration_sec": 6.8,
+    "stdout_snippet": "+------------------------------------------------------+\n| YottaFlex Reproducibility & Validation Verifier      |\n| Profile: STARTER | Seed: 20261022 | Reports: reports |\n+------------------------------------------------------+\n             Bitwise Reproducibility Comparison (STARTER Profile)"
   },
   {
     "label": "Full generate",
-    "command": "python -m yotta_oee generate --profile full --seed 20261022 --output-dir data/full",
+    "command": "C:\\Python314\\python.exe -m yotta_oee generate --profile full --seed 20261022 -o data/full",
     "returncode": 0,
-    "duration_sec": 35.18
+    "duration_sec": 27.42,
+    "stdout_snippet": "+---------------------------------+\n| YottaFlex OEE Dataset Generator |\n| Profile: FULL | Seed: 20261022  |\n+---------------------------------+\n[SUCCESS] Dataset successfully generated at: data\\full\n\n                    Generated Tables Summary (Full Profile)                    \n+-------------------"
   },
   {
     "label": "Full validate",
-    "command": "python -m yotta_oee validate -i data/full -o reports/validation_findings_full.json",
+    "command": "C:\\Python314\\python.exe -m yotta_oee validate -i data/full -o reports/full_validation_findings.json",
     "returncode": 0,
-    "duration_sec": 126.19
+    "duration_sec": 142.04,
+    "stdout_snippet": "+----------------------------------------+\n| YottaFlex Multi-Rule Validation Engine |\n| Target Directory: data\\full            |\n+----------------------------------------+\n  Validation Execution Summary   \n+-------------------------------+\n| Metric                | Value |\n|-----------------------+-"
   },
   {
     "label": "Full calculate-oee",
-    "command": "python -m yotta_oee calculate-oee -i data/full -f reports/validation_findings_full.json -o data/full/oee_aggregates.csv",
+    "command": "C:\\Python314\\python.exe -m yotta_oee calculate-oee -i data/full -f reports/full_validation_findings.json",
     "returncode": 0,
-    "duration_sec": 5.37
+    "duration_sec": 5.99,
+    "stdout_snippet": "+----------------------------------------------+\n| YottaFlex Shift-Level OEE Calculation Engine |\n| Source Directory: data\\full                  |\n+----------------------------------------------+\nConsumed 100 validator findings for decision-policy application.\n[SUCCESS] Computed 8100 OEE aggregates."
+  },
+  {
+    "label": "Full recompute-oee",
+    "command": "C:\\Python314\\python.exe -m yotta_oee recompute-oee -i data/full -f reports/full_validation_findings.json",
+    "returncode": 0,
+    "duration_sec": 6.07,
+    "stdout_snippet": "+--------------------------------------------------+\n| YottaFlex Independent OEE Recomputation Engine   |\n| Source Directory: data\\full | Tolerance: 1.0e-06 |\n+--------------------------------------------------+\n[SUCCESS] All 8100 aggregates match independent recomputation within tolerance \n1.0e-06."
   },
   {
     "label": "Full benchmark",
-    "command": "python -m yotta_oee benchmark -i data/full -f reports/validation_findings_full.json -o reports/benchmark_full.json",
-    "returncode": 2,
-    "duration_sec": 0.88
+    "command": "C:\\Python314\\python.exe -m yotta_oee benchmark -i data/full -f reports/full_validation_findings.json",
+    "returncode": 0,
+    "duration_sec": 0.87,
+    "stdout_snippet": "+--------------------------------------------------------+\n| YottaFlex Anomaly Detection Benchmark Evaluator        |\n| Ground Truth: data\\full\\ground_truth.json              |\n| Findings Report: reports\\full_validation_findings.json |\n+--------------------------------------------------------+"
   },
   {
     "label": "Full export",
-    "command": "python -m yotta_oee export -i data/full -o data/full/exports -f json,sql",
+    "command": "C:\\Python314\\python.exe -m yotta_oee export -i data/full -o data/full/exports -f json,sql",
     "returncode": 0,
-    "duration_sec": 18.6
-  },
-  {
-    "label": "Full verify",
-    "command": "python -m yotta_oee verify --profile full --seed 20261022",
-    "returncode": 0,
-    "duration_sec": 276.07
+    "duration_sec": 22.57,
+    "stdout_snippet": "+----------------------------------------+\n| YottaFlex Dataset Exporter             |\n| Source: data\\full | Formats: json, sql |\n+----------------------------------------+\n[SUCCESS] Export completed to: <PORTABLE_PATH> 14 artifact files across 12 domain table"
   }
 ]

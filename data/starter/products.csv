@@ -1,5 +1,5 @@
-product_id,sku,name,family
-PRD-0001,SKU-AER-0001,Aerospace Precision Component 01,AEROSPACE
-PRD-0002,SKU-AUT-0002,Automotive Precision Component 02,AUTOMOTIVE
-PRD-0003,SKU-MED-0003,Medical Precision Component 03,MEDICAL
-PRD-0004,SKU-ENE-0004,Energy Precision Component 04,ENERGY
+product_id,sku,name,family,effective_from,effective_to,status
+PRD-0001,SKU-AER-0001,Aerospace Precision Component 01,AEROSPACE,2026-01-01T00:00:00Z,,ACTIVE
+PRD-0002,SKU-AUT-0002,Automotive Precision Component 02,AUTOMOTIVE,2026-01-01T00:00:00Z,,ACTIVE
+PRD-0003,SKU-MED-0003,Medical Precision Component 03,MEDICAL,2026-01-01T00:00:00Z,,ACTIVE
+PRD-0004,SKU-ENE-0004,Energy Precision Component 04,ENERGY,2026-01-01T00:00:00Z,,ACTIVE

@@ -1,8 +1,8 @@
 {
   "profile": "full",
   "total_aggregates": 8100,
-  "anomalous_aggregates_count": 189,
-  "clean_aggregates_count": 7911,
+  "anomalous_aggregates_count": 136,
+  "clean_aggregates_count": 7964,
   "equivalence_verification": {
     "total_verified": 8100,
     "passed_count": 8100,
@@ -10,13 +10,13 @@
     "max_delta": 3.3306690738754696e-16
   },
   "quality_sampling": {
-    "total_inspections": 16200,
-    "total_inspected_units": 486640,
-    "total_production_units": 12611185,
-    "sampling_coverage_pct": 3.86,
+    "total_inspections": 16164,
+    "total_inspected_units": 485640,
+    "total_production_units": 12693429,
+    "sampling_coverage_pct": 3.83,
     "sample_size_stats": {
-      "total_samples": 8100,
-      "min_sample_units": 30,
+      "total_samples": 8082,
+      "min_sample_units": 20,
       "max_sample_units": 70,
       "mean_sample_units": 60.1
     },

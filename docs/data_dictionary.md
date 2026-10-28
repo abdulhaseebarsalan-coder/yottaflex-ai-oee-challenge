@@ -34,6 +34,9 @@ erDiagram
         string name "Facility Name"
         string timezone "IANA Timezone (UTC default)"
         string country "ISO Alpha-3 (e.g. USA)"
+        datetime effective_from "Effective introduction timestamp"
+        datetime effective_to "Nullable effective decommission timestamp"
+        string status "Enum: ACTIVE, PLANNED, MAINTENANCE, RETIRED"
     }
 
     LINES {
@@ -41,6 +44,9 @@ erDiagram
         string plant_id FK "References plants.plant_id"
         string name "Production Line Name"
         string line_type "Enum: MACHINING, ASSEMBLY, PACKAGING"
+        datetime effective_from "Effective introduction timestamp"
+        datetime effective_to "Nullable effective decommission timestamp"
+        string status "Enum: ACTIVE, PLANNED, MAINTENANCE, RETIRED"
     }
 
     MACHINES {
@@ -49,6 +55,9 @@ erDiagram
         string name "Machine Tag"
         integer sequence_order "Sequential station index >= 1"
         string criticality "Enum: HIGH, MEDIUM, LOW"
+        datetime effective_from "Effective introduction timestamp"
+        datetime effective_to "Nullable effective decommission timestamp"
+        string status "Enum: ACTIVE, PLANNED, MAINTENANCE, RETIRED"
     }
 
     PRODUCTS {
@@ -56,6 +65,9 @@ erDiagram
         string sku "Stock Keeping Unit"
         string name "Product Catalog Title"
         string family "Product Family / Category"
+        datetime effective_from "Effective introduction timestamp"
+        datetime effective_to "Nullable effective decommission timestamp"
+        string status "Enum: ACTIVE, PLANNED, MAINTENANCE, RETIRED"
     }
 
     SHIFTS {
@@ -72,6 +84,9 @@ erDiagram
         string machine_id FK "References machines.machine_id"
         string product_id FK "References products.product_id"
         float ideal_cycle_time_sec "Engineering takt time (seconds > 0)"
+        datetime effective_from "Effective calibration timestamp"
+        datetime effective_to "Nullable effective decommission timestamp"
+        string status "Enum: ACTIVE, PLANNED, MAINTENANCE, RETIRED"
     }
 
     DOWNTIME_REASONS {
@@ -168,6 +183,9 @@ erDiagram
 | `name` | String | No | - | Min: 1, Max: 64 chars | Facility name |
 | `timezone` | String | No | - | Max: 32 chars (Default: `UTC`) | Operating timezone designation |
 | `country` | String | No | - | Length: 2-3 chars (Default: `USA`) | Country code |
+| `effective_from` | DateTime | No | - | ISO 8601 UTC | Commissioning effective date |
+| `effective_to` | DateTime | Yes | - | ISO 8601 UTC (nullable) | Decommissioning effective date |
+| `status` | Enum | No | - | `EntityStatus`: `ACTIVE`, `PLANNED`, `MAINTENANCE`, `RETIRED` | Facility operating lifecycle status |
 
 ---
 
@@ -182,6 +200,9 @@ erDiagram
 | `plant_id` | String | No | FK | References `plants.plant_id` | Facility reference |
 | `name` | String | No | - | Min: 1, Max: 64 chars | Production line designation |
 | `line_type` | Enum | No | - | `LineType`: `MACHINING`, `ASSEMBLY`, `PACKAGING` | Functional line classification |
+| `effective_from` | DateTime | No | - | ISO 8601 UTC | Line commissioning date |
+| `effective_to` | DateTime | Yes | - | ISO 8601 UTC (nullable) | Line retirement date |
+| `status` | Enum | No | - | `EntityStatus`: `ACTIVE`, `PLANNED`, `MAINTENANCE`, `RETIRED` | Line operating lifecycle status |
 
 ---
 
@@ -197,6 +218,9 @@ erDiagram
 | `name` | String | No | - | Min: 1, Max: 64 chars | Machine equipment name |
 | `sequence_order` | Integer | No | - | Value $\ge 1$ | Station flow sequence along line |
 | `criticality` | Enum | No | - | `MachineCriticality`: `HIGH`, `MEDIUM`, `LOW` | Operational criticality index |
+| `effective_from` | DateTime | No | - | ISO 8601 UTC | Machine commissioning date |
+| `effective_to` | DateTime | Yes | - | ISO 8601 UTC (nullable) | Machine retirement date |
+| `status` | Enum | No | - | `EntityStatus`: `ACTIVE`, `PLANNED`, `MAINTENANCE`, `RETIRED` | Machine lifecycle status |
 
 ---
 
@@ -211,6 +235,9 @@ erDiagram
 | `sku` | String | No | - | Min: 1, Max: 32 chars | Stock-keeping unit code |
 | `name` | String | No | - | Min: 1, Max: 64 chars | Catalog title |
 | `family` | String | No | - | Min: 1, Max: 32 chars | Product family / component group |
+| `effective_from` | DateTime | No | - | ISO 8601 UTC | Product commercial launch date |
+| `effective_to` | DateTime | Yes | - | ISO 8601 UTC (nullable) | Product end-of-life retirement date |
+| `status` | Enum | No | - | `EntityStatus`: `ACTIVE`, `PLANNED`, `MAINTENANCE`, `RETIRED` | Product catalog lifecycle status |
 
 ---
 
@@ -241,6 +268,9 @@ erDiagram
 | `machine_id` | String | No | FK | References `machines.machine_id` | Machine station reference |
 | `product_id` | String | No | FK | References `products.product_id` | Product reference |
 | `ideal_cycle_time_sec` | Float | No | - | Value $> 0.0$ (seconds) | Master takt time specification |
+| `effective_from` | DateTime | No | - | ISO 8601 UTC | Standard calibration effective date |
+| `effective_to` | DateTime | Yes | - | ISO 8601 UTC (nullable) | Standard expiration date |
+| `status` | Enum | No | - | `EntityStatus`: `ACTIVE`, `PLANNED`, `MAINTENANCE`, `RETIRED` | Engineering standard lifecycle status |
 
 ---
 
@@ -378,3 +408,4 @@ erDiagram
 | `DefectCode` | `DIMENSIONAL_OUT_OF_SPEC`, `SURFACE_SCRATCH`, `BURR_CONTAMINATION`, `MATERIAL_VOIDS`, `PACKAGING_DAMAGE`, `TOOL_MARKING` | Visual and dimensional defect codes |
 | `AggregateStatus` | `CLEAN`, `FLAGGED`, `ANOMALOUS` | Shift OEE calculation confidence status |
 | `AnomalyType` | `OVERLAPPING_STATE`, `UNEXPLAINED_COUNT_DROP`, `SCRAP_EXCEEDS_TOTAL`, `INVALID_CYCLE_TIME`, `BREAKDOWN_OVERLAPS_BREAK` | Challenge synthetic edge case categories |
+| `EntityStatus` | `ACTIVE`, `PLANNED`, `MAINTENANCE`, `RETIRED` | Master entity lifecycle states |

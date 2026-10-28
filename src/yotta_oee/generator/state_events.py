@@ -165,25 +165,31 @@ class StateEventGenerator:
                                 # Unplanned stoppage / buffer starvation or blockage
                                 # Reserve at least 300s before seg_end so segment returns to RUNNING before planned break
                                 stop_rem = int((seg_end - curr_ptr).total_seconds()) - 300
-                                if stop_rem >= 180:
-                                    stop_dur = self.rng.randint(180, min(stop_rem, 480))
-                                    stop_end = curr_ptr + timedelta(seconds=stop_dur)
-
+                                if stop_rem >= 60:
                                     stop_roll = self.rng.random()
-                                    if stop_roll < 0.65:
+                                    if stop_roll < 0.25:
+                                        # Micro-stop: explicit short, transient stoppage (< 300s, typically 45s - 180s)
+                                        st_type = MachineState.UNPLANNED_DOWNTIME
+                                        reason = "DT-UNPLANNED-MICRO"
+                                        stop_dur = self.rng.randint(45, min(stop_rem, 180))
+                                    elif stop_roll < 0.65:
                                         st_type = MachineState.UNPLANNED_DOWNTIME
                                         reason = self.rng.choice([
                                             "DT-UNPLANNED-JAM",
                                             "DT-UNPLANNED-ELEC",
                                             "DT-UNPLANNED-TOOL",
                                         ])
+                                        stop_dur = self.rng.randint(180, min(max(180, stop_rem), 480))
                                     elif stop_roll < 0.85:
                                         st_type = MachineState.STARVED
                                         reason = "DT-STOP-STARVED"
+                                        stop_dur = self.rng.randint(180, min(max(180, stop_rem), 480))
                                     else:
                                         st_type = MachineState.BLOCKED
                                         reason = "DT-STOP-BLOCKED"
+                                        stop_dur = self.rng.randint(180, min(max(180, stop_rem), 480))
 
+                                    stop_end = curr_ptr + timedelta(seconds=stop_dur)
                                     evt_id = f"EVT-{machine.machine_id}-{event_counters[machine.machine_id]:06d}"
                                     event_counters[machine.machine_id] += 1
                                     all_events.append(

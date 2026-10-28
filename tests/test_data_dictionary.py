@@ -8,6 +8,7 @@ from yotta_oee.domain.enums import (
     AnomalyType,
     DefectCode,
     DowntimeCategory,
+    EntityStatus,
     InspectionType,
     LineType,
     MachineCriticality,
@@ -89,6 +90,7 @@ class TestDataDictionaryDrift:
             DefectCode,
             AggregateStatus,
             AnomalyType,
+            EntityStatus,
         ],
     )
     def test_all_enums_documented(self, data_dictionary_text: str, enum_cls):

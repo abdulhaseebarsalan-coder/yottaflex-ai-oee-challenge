@@ -251,3 +251,59 @@ class TestIndividualValidationRules:
         assert "0.350s" in findings[0].message
         assert "12.000s" in findings[0].message
 
+    def test_order_lifecycle_rule_val_ord_001(self):
+        """Test VAL-ORD-001 catches cancelled orders with counts/inspections and premature in-progress orders."""
+        from yotta_oee.validator.rules_business import OrderLifecycleRule
+        rule = OrderLifecycleRule()
+
+        # 1. Cancelled order with count and inspection
+        orders_df = pl.DataFrame({
+            "order_id": ["PO-01", "PO-02"],
+            "product_id": ["PRD-01", "PRD-01"],
+            "line_id": ["LINE-01", "LINE-01"],
+            "scheduled_start": ["2026-01-01T06:00:00Z", "2026-01-02T06:00:00Z"],
+            "scheduled_end": ["2026-01-01T14:00:00Z", "2026-01-02T14:00:00Z"],
+            "status": ["CANCELLED", "COMPLETED"],
+        })
+        counts_df = pl.DataFrame({
+            "count_id": ["CNT-01"],
+            "order_id": ["PO-01"],
+            "machine_id": ["MCH-LINE-01-01"],
+            "cumulative_count": [100],
+        })
+        qc_df = pl.DataFrame({
+            "inspection_id": ["QC-01"],
+            "order_id": ["PO-01"],
+            "machine_id": ["MCH-LINE-01-01"],
+            "inspected_qty": [20],
+        })
+
+        findings = rule.validate({
+            "production_orders.csv": orders_df,
+            "production_counts.csv": counts_df,
+            "quality_inspections.csv": qc_df,
+        })
+        assert len(findings) == 2
+        assert all(f.rule_id == ValidationRuleId.VAL_ORD_001 for f in findings)
+        assert any("production count" in f.message for f in findings)
+        assert any("quality inspection" in f.message for f in findings)
+
+        # 2. In-progress order earlier than completed order on same line
+        bad_orders_df = pl.DataFrame({
+            "order_id": ["PO-01", "PO-02"],
+            "product_id": ["PRD-01", "PRD-01"],
+            "line_id": ["LINE-01", "LINE-01"],
+            "scheduled_start": ["2026-01-01T06:00:00Z", "2026-01-02T06:00:00Z"],
+            "scheduled_end": ["2026-01-01T14:00:00Z", "2026-01-02T14:00:00Z"],
+            "status": ["IN_PROGRESS", "COMPLETED"],
+        })
+        findings2 = rule.validate({
+            "production_orders.csv": bad_orders_df,
+            "production_counts.csv": pl.DataFrame(),
+            "quality_inspections.csv": pl.DataFrame(),
+        })
+        assert len(findings2) == 1
+        assert findings2[0].rule_id == ValidationRuleId.VAL_ORD_001
+        assert "earlier than completed order" in findings2[0].message
+
+

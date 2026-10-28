@@ -42,6 +42,12 @@
     "affects_availability": true
   },
   {
+    "reason_code": "DT-UNPLANNED-MICRO",
+    "category": "UNPLANNED",
+    "description": "Transient Equipment Micro-Stop / Minor Feed Jam (< 5 min)",
+    "affects_availability": true
+  },
+  {
     "reason_code": "DT-UNPLANNED-OP",
     "category": "UNPLANNED",
     "description": "Unscheduled Operator Absence or Safety Interlock Trip",

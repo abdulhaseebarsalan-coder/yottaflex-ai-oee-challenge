@@ -3,7 +3,7 @@
 from typing import Dict, List, Set, Tuple
 import polars as pl
 
-from yotta_oee.domain.enums import MachineState, Severity, ValidationRuleId
+from yotta_oee.domain.enums import MachineState, OrderStatus, Severity, ValidationRuleId
 from yotta_oee.validator.base import BaseValidationRule, RuleFinding
 
 
@@ -584,4 +584,108 @@ class PerformancePlausibilityRule(BaseValidationRule):
                     )
 
         return findings
+
+
+class OrderLifecycleRule(BaseValidationRule):
+    """VAL-ORD-001: Validate order lifecycle consistency.
+
+    1. CANCELLED orders must have zero production counts and zero quality inspections.
+    2. IN_PROGRESS orders must not precede any COMPLETED order on the same machine/line.
+    """
+
+    @property
+    def rule_id(self) -> ValidationRuleId:
+        return ValidationRuleId.VAL_ORD_001
+
+    @property
+    def description(self) -> str:
+        return "Validate that CANCELLED orders have zero counts/inspections and IN_PROGRESS orders do not precede COMPLETED orders."
+
+    def validate(self, dataset: Dict[str, pl.DataFrame]) -> List[RuleFinding]:
+        findings: List[RuleFinding] = []
+
+        if "production_orders.csv" not in dataset:
+            return findings
+
+        orders_df = dataset["production_orders.csv"]
+        counts_df = dataset.get("production_counts.csv")
+        qc_df = dataset.get("quality_inspections.csv")
+
+        # 1. CANCELLED orders check
+        cancelled_orders = orders_df.filter(pl.col("status") == OrderStatus.CANCELLED.value)
+        if len(cancelled_orders) > 0:
+            cancelled_ids = set(cancelled_orders["order_id"].to_list())
+
+            # Check counts
+            if counts_df is not None:
+                canc_counts = counts_df.filter(pl.col("order_id").is_in(list(cancelled_ids)))
+                if len(canc_counts) > 0:
+                    counts_by_ord = canc_counts.group_by("order_id").len()
+                    for row in counts_by_ord.iter_rows(named=True):
+                        findings.append(
+                            RuleFinding(
+                                rule_id=self.rule_id,
+                                severity=Severity.ERROR,
+                                table_name="production_orders.csv",
+                                record_id=row["order_id"],
+                                field_name="status",
+                                message=(
+                                    f"Cancelled order {row['order_id']} has {row['len']} "
+                                    f"production count records; CANCELLED orders must have zero production counts."
+                                ),
+                                observed_value=str(row["len"]),
+                                expected_condition="0 production counts",
+                            )
+                        )
+
+            # Check quality inspections
+            if qc_df is not None:
+                canc_qc = qc_df.filter(pl.col("order_id").is_in(list(cancelled_ids)))
+                if len(canc_qc) > 0:
+                    qc_by_ord = canc_qc.group_by("order_id").len()
+                    for row in qc_by_ord.iter_rows(named=True):
+                        findings.append(
+                            RuleFinding(
+                                rule_id=self.rule_id,
+                                severity=Severity.ERROR,
+                                table_name="production_orders.csv",
+                                record_id=row["order_id"],
+                                field_name="status",
+                                message=(
+                                    f"Cancelled order {row['order_id']} has {row['len']} "
+                                    f"quality inspection records; CANCELLED orders must have zero quality inspections."
+                                ),
+                                observed_value=str(row["len"]),
+                                expected_condition="0 quality inspections",
+                            )
+                        )
+
+        # 2. IN_PROGRESS orders check: must not be earlier than last COMPLETED order on the same machine/line
+        in_prog_orders = orders_df.filter(pl.col("status") == OrderStatus.IN_PROGRESS.value)
+        completed_orders = orders_df.filter(pl.col("status") == OrderStatus.COMPLETED.value)
+
+        if len(in_prog_orders) > 0 and len(completed_orders) > 0:
+            for ip in in_prog_orders.iter_rows(named=True):
+                line_completed = completed_orders.filter(pl.col("line_id") == ip["line_id"])
+                if len(line_completed) > 0:
+                    latest_completed_start = line_completed["scheduled_start"].max()
+                    if ip["scheduled_start"] < latest_completed_start:
+                        findings.append(
+                            RuleFinding(
+                                rule_id=self.rule_id,
+                                severity=Severity.ERROR,
+                                table_name="production_orders.csv",
+                                record_id=ip["order_id"],
+                                field_name="scheduled_start",
+                                message=(
+                                    f"In-progress order {ip['order_id']} scheduled_start ({ip['scheduled_start']}) "
+                                    f"is earlier than completed order start ({latest_completed_start}) on line {ip['line_id']}."
+                                ),
+                                observed_value=str(ip["scheduled_start"]),
+                                expected_condition=f">= {latest_completed_start}",
+                            )
+                        )
+
+        return findings
+
 

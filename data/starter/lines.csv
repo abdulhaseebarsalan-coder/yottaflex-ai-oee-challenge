@@ -1,3 +1,3 @@
-line_id,plant_id,name,line_type
-LINE-01,PLANT-01,Cell 01 (Machining),MACHINING
-LINE-02,PLANT-01,Cell 02 (Assembly),ASSEMBLY
+line_id,plant_id,name,line_type,effective_from,effective_to,status
+LINE-01,PLANT-01,Cell 01 (Machining),MACHINING,2026-01-01T00:00:00Z,,ACTIVE
+LINE-02,PLANT-01,Cell 02 (Assembly),ASSEMBLY,2026-01-01T00:00:00Z,,ACTIVE

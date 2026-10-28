@@ -1,2 +1,2 @@
-plant_id,name,timezone,country
-PLANT-01,Apex Advanced Manufacturing Facility 1,UTC,USA
+plant_id,name,timezone,country,effective_from,effective_to,status
+PLANT-01,Apex Advanced Manufacturing Facility 1,UTC,USA,2026-01-01T00:00:00Z,,ACTIVE

@@ -15,10 +15,17 @@ from yotta_oee.validator.rules_business import (
     CorrectionReferenceValidityRule,
     CountProgressionRule,
     CycleTimeAdherenceRule,
+    OrderLifecycleRule,
     PerformancePlausibilityRule,
     QualityMassBalanceRule,
     RunningStateAuthorizationRule,
     StateTransitionLifecycleRule,
+)
+from yotta_oee.validator.rules_oee import (
+    EffectiveDateRule,
+    OEERecomputeConsistencyRule,
+    OEEIdentityRule,
+    OEERangeSanityRule,
 )
 from yotta_oee.validator.rules_relational import (
     DeDuplicationRule,
@@ -57,6 +64,7 @@ class ValidationEngine:
                 StateMutualExclusivityRule(),
                 BreakDowntimeOverlapRule(),
                 TimeAccountingRule(),
+                EffectiveDateRule(),
                 StateTransitionLifecycleRule(),
                 CountProgressionRule(),
                 CorrectionReferenceValidityRule(),
@@ -64,6 +72,10 @@ class ValidationEngine:
                 QualityMassBalanceRule(),
                 CycleTimeAdherenceRule(),
                 PerformancePlausibilityRule(),
+                OrderLifecycleRule(),
+                OEERecomputeConsistencyRule(),
+                OEEIdentityRule(),
+                OEERangeSanityRule(),
             ]
 
     def validate_directory(

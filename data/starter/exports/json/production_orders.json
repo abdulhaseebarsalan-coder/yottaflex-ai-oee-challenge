@@ -96,7 +96,7 @@
     "target_quantity": 1957,
     "scheduled_start": "2026-01-03T22:00:00Z",
     "scheduled_end": "2026-01-04T06:00:00Z",
-    "status": "COMPLETED",
+    "status": "IN_PROGRESS",
     "planned_cycle_time_sec": 13.5
   }
 ]

@@ -65,6 +65,12 @@ class VerificationRunner:
             )
             assert res_oee1.returncode == 0, f"Process 1 calculate-oee failed: {res_oee1.stderr}"
 
+            res_rec1 = subprocess.run(
+                [sys.executable, "-m", "yotta_oee", "recompute-oee", "-i", str(p1_dir), "-a", str(p1_oee), "-f", str(p1_findings)],
+                capture_output=True, text=True
+            )
+            assert res_rec1.returncode == 0, f"Process 1 recompute-oee failed: {res_rec1.stderr}\n{res_rec1.stdout}"
+
             # ---------------------------------------------------------------
             # 2. Process 2 Execution (Independent Subprocess)
             # ---------------------------------------------------------------
@@ -85,6 +91,12 @@ class VerificationRunner:
                 capture_output=True, text=True
             )
             assert res_oee2.returncode == 0, f"Process 2 calculate-oee failed: {res_oee2.stderr}"
+
+            res_rec2 = subprocess.run(
+                [sys.executable, "-m", "yotta_oee", "recompute-oee", "-i", str(p2_dir), "-a", str(p2_oee), "-f", str(p2_findings)],
+                capture_output=True, text=True
+            )
+            assert res_rec2.returncode == 0, f"Process 2 recompute-oee failed: {res_rec2.stderr}\n{res_rec2.stdout}"
 
             # ---------------------------------------------------------------
             # 3. Discover Files & Compare SHA-256 Hashes

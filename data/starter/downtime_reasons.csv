@@ -6,5 +6,6 @@ DT-STOP-BLOCKED,LINE_STOP,Downstream Line Blockage / Output Buffer Saturation,Tr
 DT-STOP-STARVED,LINE_STOP,Material Starvation from Upstream Feeder Buffer,True
 DT-UNPLANNED-ELEC,UNPLANNED,Electrical Component / Sensor Signal Failure,True
 DT-UNPLANNED-JAM,UNPLANNED,Mechanical Jam / Material Feed Obstruction,True
+DT-UNPLANNED-MICRO,UNPLANNED,Transient Equipment Micro-Stop / Minor Feed Jam (< 5 min),True
 DT-UNPLANNED-OP,UNPLANNED,Unscheduled Operator Absence or Safety Interlock Trip,True
 DT-UNPLANNED-TOOL,UNPLANNED,Spindle / Cutting Tool Fracture or Excessive Wear,True

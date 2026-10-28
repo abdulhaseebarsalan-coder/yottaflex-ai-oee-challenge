@@ -1,7 +1,7 @@
-machine_id,line_id,name,sequence_order,criticality
-MCH-LINE-01-01,LINE-01,Station 01 (Cell 01 (Machining)),1,HIGH
-MCH-LINE-01-02,LINE-01,Station 02 (Cell 01 (Machining)),2,MEDIUM
-MCH-LINE-01-03,LINE-01,Station 03 (Cell 01 (Machining)),3,LOW
-MCH-LINE-02-01,LINE-02,Station 01 (Cell 02 (Assembly)),1,HIGH
-MCH-LINE-02-02,LINE-02,Station 02 (Cell 02 (Assembly)),2,MEDIUM
-MCH-LINE-02-03,LINE-02,Station 03 (Cell 02 (Assembly)),3,LOW
+machine_id,line_id,name,sequence_order,criticality,effective_from,effective_to,status
+MCH-LINE-01-01,LINE-01,Station 01 (Cell 01 (Machining)),1,HIGH,2026-01-01T00:00:00Z,,ACTIVE
+MCH-LINE-01-02,LINE-01,Station 02 (Cell 01 (Machining)),2,MEDIUM,2026-01-01T00:00:00Z,,ACTIVE
+MCH-LINE-01-03,LINE-01,Station 03 (Cell 01 (Machining)),3,LOW,2026-01-01T00:00:00Z,,ACTIVE
+MCH-LINE-02-01,LINE-02,Station 01 (Cell 02 (Assembly)),1,HIGH,2026-01-01T00:00:00Z,,ACTIVE
+MCH-LINE-02-02,LINE-02,Station 02 (Cell 02 (Assembly)),2,MEDIUM,2026-01-01T00:00:00Z,,ACTIVE
+MCH-LINE-02-03,LINE-02,Station 03 (Cell 02 (Assembly)),3,LOW,2026-01-01T00:00:00Z,,ACTIVE

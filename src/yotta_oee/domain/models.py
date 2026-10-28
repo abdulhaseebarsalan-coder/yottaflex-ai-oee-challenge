@@ -3,7 +3,7 @@
 ground truth anomalies, and validation findings.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, Dict, Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -13,6 +13,7 @@ from yotta_oee.domain.enums import (
     AnomalyType,
     DefectCode,
     DowntimeCategory,
+    EntityStatus,
     InspectionType,
     LineType,
     MachineCriticality,
@@ -41,6 +42,9 @@ class Plant(BaseModel):
     name: str = Field(..., min_length=1, max_length=64)
     timezone: str = Field(default="UTC", max_length=32)
     country: str = Field(default="USA", min_length=2, max_length=3)
+    effective_from: datetime = Field(default_factory=lambda: datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc))
+    effective_to: Optional[datetime] = None
+    status: EntityStatus = Field(default=EntityStatus.ACTIVE)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -48,6 +52,9 @@ class Plant(BaseModel):
             "name": self.name,
             "timezone": self.timezone,
             "country": self.country,
+            "effective_from": format_iso(self.effective_from),
+            "effective_to": format_iso(self.effective_to) if self.effective_to else "",
+            "status": self.status.value,
         }
 
 
@@ -59,6 +66,9 @@ class Line(BaseModel):
     plant_id: str = Field(..., pattern=r"^PLANT-\d{2}$")
     name: str = Field(..., min_length=1, max_length=64)
     line_type: LineType = Field(default=LineType.MACHINING)
+    effective_from: datetime = Field(default_factory=lambda: datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc))
+    effective_to: Optional[datetime] = None
+    status: EntityStatus = Field(default=EntityStatus.ACTIVE)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -66,6 +76,9 @@ class Line(BaseModel):
             "plant_id": self.plant_id,
             "name": self.name,
             "line_type": self.line_type.value,
+            "effective_from": format_iso(self.effective_from),
+            "effective_to": format_iso(self.effective_to) if self.effective_to else "",
+            "status": self.status.value,
         }
 
 
@@ -78,6 +91,9 @@ class Machine(BaseModel):
     name: str = Field(..., min_length=1, max_length=64)
     sequence_order: int = Field(..., ge=1, description="Station order on the line")
     criticality: MachineCriticality = Field(default=MachineCriticality.MEDIUM)
+    effective_from: datetime = Field(default_factory=lambda: datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc))
+    effective_to: Optional[datetime] = None
+    status: EntityStatus = Field(default=EntityStatus.ACTIVE)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -86,6 +102,9 @@ class Machine(BaseModel):
             "name": self.name,
             "sequence_order": self.sequence_order,
             "criticality": self.criticality.value,
+            "effective_from": format_iso(self.effective_from),
+            "effective_to": format_iso(self.effective_to) if self.effective_to else "",
+            "status": self.status.value,
         }
 
 
@@ -125,6 +144,9 @@ class Product(BaseModel):
     sku: str = Field(..., min_length=1, max_length=32)
     name: str = Field(..., min_length=1, max_length=64)
     family: str = Field(..., min_length=1, max_length=32)
+    effective_from: datetime = Field(default_factory=lambda: datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc))
+    effective_to: Optional[datetime] = None
+    status: EntityStatus = Field(default=EntityStatus.ACTIVE)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -132,6 +154,9 @@ class Product(BaseModel):
             "sku": self.sku,
             "name": self.name,
             "family": self.family,
+            "effective_from": format_iso(self.effective_from),
+            "effective_to": format_iso(self.effective_to) if self.effective_to else "",
+            "status": self.status.value,
         }
 
 
@@ -143,6 +168,9 @@ class MachineProductStandard(BaseModel):
     machine_id: str = Field(..., pattern=r"^MCH-LINE-\d{2}-\d{2}$")
     product_id: str = Field(..., pattern=r"^PRD-\d{4}$")
     ideal_cycle_time_sec: float = Field(..., gt=0.0, description="Standard takt time in seconds")
+    effective_from: datetime = Field(default_factory=lambda: datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc))
+    effective_to: Optional[datetime] = None
+    status: EntityStatus = Field(default=EntityStatus.ACTIVE)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -150,6 +178,9 @@ class MachineProductStandard(BaseModel):
             "machine_id": self.machine_id,
             "product_id": self.product_id,
             "ideal_cycle_time_sec": round(self.ideal_cycle_time_sec, 3),
+            "effective_from": format_iso(self.effective_from),
+            "effective_to": format_iso(self.effective_to) if self.effective_to else "",
+            "status": self.status.value,
         }
 
 

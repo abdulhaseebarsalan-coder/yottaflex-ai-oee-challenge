@@ -37,13 +37,22 @@ class OrderGenerator:
         first_shift_start = sorted_shifts[0].start_time
         last_shift_end = sorted_shifts[-1].end_time
 
+        is_full = getattr(self.config, "num_days", 3) >= 30
         for line in lines:
             current_time = first_shift_start
             prod_idx = self.rng.randint(0, len(products) - 1)
             lead_machine = f"MCH-{line.line_id}-01"
 
             while current_time < last_shift_end:
-                product = products[prod_idx % len(products)]
+                # Filter candidate products active at current_time respecting effective dates
+                active_prods = [
+                    p for p in products
+                    if p.effective_from <= current_time and (p.effective_to is None or current_time < p.effective_to)
+                ]
+                if not active_prods:
+                    active_prods = products
+
+                product = active_prods[prod_idx % len(active_prods)]
                 order_id = f"PO-{year}-{order_counter:06d}"
                 order_counter += 1
 
@@ -51,16 +60,24 @@ class OrderGenerator:
                 duration_shifts = self.rng.choice([1, 2, 3])
                 order_duration = timedelta(hours=duration_shifts * 8)
                 order_end = min(current_time + order_duration, last_shift_end)
+                if product.effective_to is not None and order_end > product.effective_to:
+                    order_end = product.effective_to
 
-                # Realistic target quantity based on ~70% operating efficiency at 10s takt
-                # 8h * 3600s = 28,800s -> ~2,000 units per shift
-                target_qty = duration_shifts * self.rng.randint(1200, 2200)
+                if order_end <= current_time:
+                    current_time += timedelta(hours=8)
+                    continue
+
+                actual_hours = (order_end - current_time).total_seconds() / 3600.0
+                actual_shifts = max(1, int(round(actual_hours / 8.0)))
+                target_qty = actual_shifts * self.rng.randint(1200, 2200)
 
                 # Determine lifecycle status
-                if order_end <= last_shift_end:
-                    status = OrderStatus.COMPLETED
-                else:
+                if is_full and order_counter == 50:
+                    status = OrderStatus.CANCELLED
+                elif current_time >= last_shift_end - timedelta(hours=8):
                     status = OrderStatus.IN_PROGRESS
+                else:
+                    status = OrderStatus.COMPLETED
 
                 planned_cycle_time = std_map.get((lead_machine, product.product_id), 10.0)
 

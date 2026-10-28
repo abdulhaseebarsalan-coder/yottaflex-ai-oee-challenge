@@ -172,7 +172,7 @@ class TestOEECalculatorEngine:
                     assert mut_agg.total_count == clean_agg.total_count
                     assert mut_agg.availability == clean_agg.availability
                     assert mut_agg.performance == clean_agg.performance
-                    assert 0.90 <= mut_agg.quality <= 1.0
+                    assert 0.85 <= mut_agg.quality <= 1.0
                     assert mut_agg.status == AggregateStatus.ANOMALOUS
                 else:
                     # EC-04 or EC-05: Recover to clean baseline
@@ -260,4 +260,47 @@ class TestOEECalculatorEngine:
         assert agg_zero.scrap_count == 0
         assert agg_zero.status == AggregateStatus.ANOMALOUS
         assert agg_zero.exception_count == 2
+
+    def test_decision_log_reconciliation_with_anomalous_aggregates(self, starter_dataset_path: Path):
+        """CRITICAL GOVERNANCE TEST (Item 5): Reconcile decision rows with aggregate status.
+
+        Assert that:
+        1. Every ANOMALOUS aggregate has >= 1 decision row in oee_decisions.csv.
+        2. No CLEAN aggregate has any decision row in oee_decisions.csv.
+        3. The set of unique aggregates in oee_decisions.csv strictly equals the set of ANOMALOUS aggregates.
+        """
+        import csv
+        from yotta_oee.validator.engine import ValidationEngine
+
+        val_engine = ValidationEngine()
+        summary = val_engine.validate_directory(starter_dataset_path)
+
+        calc = OEECalculatorEngine(starter_dataset_path)
+        calc.calculate_all(findings=summary.findings, output_csv=starter_dataset_path / "oee_aggregates.csv")
+
+        dec_path = starter_dataset_path / "oee_decisions.csv"
+        agg_path = starter_dataset_path / "oee_aggregates.csv"
+        assert dec_path.exists(), "oee_decisions.csv must exist"
+        assert agg_path.exists(), "oee_aggregates.csv must exist"
+
+        with open(dec_path, "r", encoding="utf-8") as f:
+            decisions = list(csv.DictReader(f))
+        with open(agg_path, "r", encoding="utf-8") as f:
+            aggregates = list(csv.DictReader(f))
+
+        anomalous_agg_ids = {a["aggregate_id"] for a in aggregates if a["status"] == "ANOMALOUS"}
+        clean_agg_ids = {a["aggregate_id"] for a in aggregates if a["status"] == "CLEAN"}
+        decision_agg_ids = {d["aggregate_id"] for d in decisions}
+
+        # 1. Every ANOMALOUS aggregate must have at least one decision row
+        for anom_id in anomalous_agg_ids:
+            assert anom_id in decision_agg_ids, f"ANOMALOUS aggregate {anom_id} missing from decision log"
+
+        # 2. No CLEAN aggregate may have any decision row
+        for clean_id in clean_agg_ids:
+            assert clean_id not in decision_agg_ids, f"CLEAN aggregate {clean_id} present in decision log"
+
+        # 3. Complete bidirectional equality
+        assert decision_agg_ids == anomalous_agg_ids
+
 

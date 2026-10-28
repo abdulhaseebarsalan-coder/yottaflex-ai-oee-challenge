@@ -8,6 +8,7 @@ from typing import List, Tuple
 from yotta_oee.domain import (
     DowntimeCategory,
     DowntimeReason,
+    EntityStatus,
     Line,
     LineType,
     Machine,
@@ -59,6 +60,12 @@ DOWNTIME_TAXONOMY: List[DowntimeReason] = [
         affects_availability=True,
     ),
     DowntimeReason(
+        reason_code="DT-UNPLANNED-MICRO",
+        category=DowntimeCategory.UNPLANNED,
+        description="Transient Equipment Micro-Stop / Minor Feed Jam (< 5 min)",
+        affects_availability=True,
+    ),
+    DowntimeReason(
         reason_code="DT-CHANGEOVER-SETUP",
         category=DowntimeCategory.CHANGEOVER,
         description="Product Die / Fixture Swap and Tooling Calibration",
@@ -100,6 +107,9 @@ class MasterDataGenerator:
                     name=f"Apex Advanced Manufacturing Facility {i}",
                     timezone="UTC",
                     country="USA",
+                    effective_from=self.config.start_date,
+                    effective_to=None,
+                    status=EntityStatus.ACTIVE,
                 )
             )
         return plants
@@ -117,6 +127,9 @@ class MasterDataGenerator:
                     plant_id=primary_plant.plant_id,
                     name=f"Cell {i:02d} ({line_type.value.capitalize()})",
                     line_type=line_type,
+                    effective_from=self.config.start_date,
+                    effective_to=None,
+                    status=EntityStatus.ACTIVE,
                 )
             )
         return lines
@@ -124,12 +137,19 @@ class MasterDataGenerator:
     def generate_machines(self, lines: List[Line]) -> List[Machine]:
         """Generate Machine stations for each line."""
         machines = []
+        is_full = getattr(self.config, "num_days", 3) >= 30
         for line in lines:
             for seq in range(1, self.config.machines_per_line + 1):
                 machine_id = f"MCH-{line.line_id}-{seq:02d}"
                 crit = MachineCriticality.HIGH if seq == 1 else (
                     MachineCriticality.MEDIUM if seq < self.config.machines_per_line else MachineCriticality.LOW
                 )
+                # In full profile, mark MCH-LINE-05-06 with MAINTENANCE lifecycle status
+                if is_full and machine_id == "MCH-LINE-05-06":
+                    m_status = EntityStatus.MAINTENANCE
+                else:
+                    m_status = EntityStatus.ACTIVE
+
                 machines.append(
                     Machine(
                         machine_id=machine_id,
@@ -137,6 +157,9 @@ class MasterDataGenerator:
                         name=f"Station {seq:02d} ({line.name})",
                         sequence_order=seq,
                         criticality=crit,
+                        effective_from=self.config.start_date,
+                        effective_to=None,
+                        status=m_status,
                     )
                 )
         return machines
@@ -144,16 +167,37 @@ class MasterDataGenerator:
     def generate_products(self) -> List[Product]:
         """Generate manufactured product master catalog."""
         products = []
+        is_full = getattr(self.config, "num_days", 3) >= 30
         for i in range(1, self.config.num_products + 1):
             prod_id = f"PRD-{i:04d}"
             family = PRODUCT_FAMILIES[(i - 1) % len(PRODUCT_FAMILIES)]
             sku = f"SKU-{family[:3]}-{i:04d}"
+
+            eff_from = self.config.start_date
+            eff_to = None
+            status = EntityStatus.ACTIVE
+
+            # Minimal realistic lifecycle in full profile:
+            # 1. PRD-0020 introduced mid-horizon on Day 31 (2026-02-01)
+            # 2. PRD-0004 retired mid-horizon on Day 45 (2026-02-15)
+            if is_full:
+                if prod_id == "PRD-0020":
+                    eff_from = datetime(2026, 2, 1, 0, 0, 0, tzinfo=timezone.utc)
+                    status = EntityStatus.ACTIVE
+                elif prod_id == "PRD-0004":
+                    eff_from = datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+                    eff_to = datetime(2026, 2, 15, 23, 59, 59, tzinfo=timezone.utc)
+                    status = EntityStatus.RETIRED
+
             products.append(
                 Product(
                     product_id=prod_id,
                     sku=sku,
                     name=f"{family.capitalize()} Precision Component {i:02d}",
                     family=family,
+                    effective_from=eff_from,
+                    effective_to=eff_to,
+                    status=status,
                 )
             )
         return products
@@ -203,12 +247,21 @@ class MasterDataGenerator:
                 hash_val = int(raw_hash[:8], 16) % 1000
                 # Realistic takt time between 4.0s and 25.0s
                 base_takt = 6.0 + (hash_val % 18) + (hash_val % 10) * 0.1
+
+                # Standards inherit the effective dates of the product & machine
+                eff_from = max(machine.effective_from, product.effective_from)
+                eff_to = product.effective_to or machine.effective_to
+                std_status = product.status if product.status == EntityStatus.RETIRED else machine.status
+
                 standards.append(
                     MachineProductStandard(
                         standard_id=std_id,
                         machine_id=machine.machine_id,
                         product_id=product.product_id,
                         ideal_cycle_time_sec=round(base_takt, 3),
+                        effective_from=eff_from,
+                        effective_to=eff_to,
+                        status=std_status,
                     )
                 )
         return standards

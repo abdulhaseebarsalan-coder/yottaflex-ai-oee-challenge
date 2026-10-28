@@ -7,7 +7,10 @@ CREATE TABLE IF NOT EXISTS plants (
     plant_id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     timezone TEXT NOT NULL,
-    country TEXT NOT NULL
+    country TEXT NOT NULL,
+    effective_from TEXT NOT NULL,
+    effective_to TEXT,
+    status TEXT NOT NULL CHECK (status IN ('ACTIVE', 'PLANNED', 'MAINTENANCE', 'RETIRED'))
 );
 
 CREATE TABLE IF NOT EXISTS lines (
@@ -15,6 +18,9 @@ CREATE TABLE IF NOT EXISTS lines (
     plant_id TEXT NOT NULL,
     name TEXT NOT NULL,
     line_type TEXT NOT NULL CHECK (line_type IN ('MACHINING', 'ASSEMBLY', 'PACKAGING')),
+    effective_from TEXT NOT NULL,
+    effective_to TEXT,
+    status TEXT NOT NULL CHECK (status IN ('ACTIVE', 'PLANNED', 'MAINTENANCE', 'RETIRED')),
     FOREIGN KEY (plant_id) REFERENCES plants(plant_id)
 );
 
@@ -24,6 +30,9 @@ CREATE TABLE IF NOT EXISTS machines (
     name TEXT NOT NULL,
     sequence_order INTEGER NOT NULL,
     criticality TEXT NOT NULL CHECK (criticality IN ('HIGH', 'MEDIUM', 'LOW')),
+    effective_from TEXT NOT NULL,
+    effective_to TEXT,
+    status TEXT NOT NULL CHECK (status IN ('ACTIVE', 'PLANNED', 'MAINTENANCE', 'RETIRED')),
     FOREIGN KEY (line_id) REFERENCES lines(line_id)
 );
 
@@ -31,7 +40,10 @@ CREATE TABLE IF NOT EXISTS products (
     product_id TEXT PRIMARY KEY,
     sku TEXT NOT NULL,
     name TEXT NOT NULL,
-    family TEXT NOT NULL
+    family TEXT NOT NULL,
+    effective_from TEXT NOT NULL,
+    effective_to TEXT,
+    status TEXT NOT NULL CHECK (status IN ('ACTIVE', 'PLANNED', 'MAINTENANCE', 'RETIRED'))
 );
 
 CREATE TABLE IF NOT EXISTS shifts (
@@ -49,6 +61,9 @@ CREATE TABLE IF NOT EXISTS machine_product_standards (
     machine_id TEXT NOT NULL,
     product_id TEXT NOT NULL,
     ideal_cycle_time_sec REAL NOT NULL,
+    effective_from TEXT NOT NULL,
+    effective_to TEXT,
+    status TEXT NOT NULL CHECK (status IN ('ACTIVE', 'PLANNED', 'MAINTENANCE', 'RETIRED')),
     FOREIGN KEY (machine_id) REFERENCES machines(machine_id),
     FOREIGN KEY (product_id) REFERENCES products(product_id)
 );

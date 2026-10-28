@@ -42,7 +42,7 @@ class TestMasterDataGenerator:
             assert std.ideal_cycle_time_sec > 0.0
 
         downtime_reasons = gen.get_downtime_reasons()
-        assert len(downtime_reasons) == 9
+        assert len(downtime_reasons) == 10
 
 
 class TestDataGenerationEngineStarter:
@@ -83,7 +83,7 @@ class TestDataGenerationEngineStarter:
         assert counts["products.csv"] == 4
         assert counts["shifts.csv"] == 9
         assert counts["machine_product_standards.csv"] == 24
-        assert counts["downtime_reasons.csv"] == 9
+        assert counts["downtime_reasons.csv"] == 10
         assert counts["production_orders.csv"] >= 4
         assert counts["state_events.csv"] > 500  # realistic timeline size
         assert counts["production_counts.csv"] > 1000

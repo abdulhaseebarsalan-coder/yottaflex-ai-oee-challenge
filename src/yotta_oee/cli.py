@@ -272,6 +272,90 @@ def calculate_oee_command(input_dir: Path, output_csv: Optional[Path], findings_
     console.print(f"Aggregates exported to: [bold]{target_csv}[/bold]\n")
 
 
+# ---------------------------------------------------------------------------
+# 3b. Independent OEE Recomputation Command
+# ---------------------------------------------------------------------------
+@main.command("recompute-oee")
+@click.option(
+    "--input-dir",
+    "-i",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    default=Path("data/starter"),
+    show_default=True,
+    help="Directory containing source telemetry CSV files and oee_aggregates.csv.",
+)
+@click.option(
+    "--aggregates-csv",
+    "-a",
+    type=click.Path(dir_okay=False, path_type=Path),
+    default=None,
+    help="Path to oee_aggregates.csv to compare against (defaults to <input-dir>/oee_aggregates.csv).",
+)
+@click.option(
+    "--findings-report",
+    "-f",
+    type=click.Path(dir_okay=False, path_type=Path),
+    default=None,
+    help="Optional path to validation findings JSON report.",
+)
+@click.option(
+    "--tolerance",
+    "-t",
+    type=float,
+    default=1e-6,
+    show_default=True,
+    help="Floating point numerical comparison tolerance.",
+)
+def recompute_oee_command(
+    input_dir: Path,
+    aggregates_csv: Optional[Path],
+    findings_report: Optional[Path],
+    tolerance: float,
+) -> None:
+    """Independently recompute OEE metrics and compare against oee_aggregates.csv within tolerance."""
+    import sys
+    from yotta_oee.recomputer.engine import IndependentOEERecomputer
+
+    console.print(
+        Panel.fit(
+            f"[bold cyan]YottaFlex Independent OEE Recomputation Engine[/bold cyan]\n"
+            f"Source Directory: [yellow]{input_dir}[/yellow] | Tolerance: [dim]{tolerance:.1e}[/dim]",
+            border_style="cyan",
+        )
+    )
+
+    target_csv = aggregates_csv or (input_dir / "oee_aggregates.csv")
+    recomputer = IndependentOEERecomputer(input_dir)
+    res = recomputer.compare_against_file(
+        aggregates_csv=target_csv,
+        findings_path=findings_report,
+        tolerance=tolerance,
+    )
+
+    if not res["matched"]:
+        console.print(f"[bold red][FAILURE][/bold red] Found {res['mismatch_count']} mismatches vs {target_csv}:")
+        tbl = Table(title="Recomputation Mismatches", border_style="red")
+        tbl.add_column("Aggregate ID", style="cyan")
+        tbl.add_column("Field", style="yellow")
+        tbl.add_column("File Value", style="white")
+        tbl.add_column("Recomputed", style="green")
+        tbl.add_column("Diff", style="bold red")
+        for m in res["mismatches"][:20]:
+            tbl.add_row(
+                str(m.get("aggregate_id", "")),
+                str(m.get("field", "")),
+                str(m.get("file_value", "")),
+                str(m.get("recomputed_value", "")),
+                str(m.get("diff", "")),
+            )
+        console.print(tbl)
+        sys.exit(1)
+
+    console.print(
+        f"[bold green][SUCCESS][/bold green] All [bold]{res['compared_count']}[/bold] aggregates match "
+        f"independent recomputation within tolerance [dim]{tolerance:.1e}[/dim].\n"
+    )
+
 
 # ---------------------------------------------------------------------------
 # 4. Ground Truth Benchmark Command

@@ -132,6 +132,7 @@ class OEECalculatorEngine:
 
         aggregates: List[OEEAggregate] = []
         equivalence_checks: List[Dict[str, Any]] = []
+        decision_records: List[Dict[str, str]] = []
         total_inspected_units = 0
         total_production_units = 0
         qc_sample_sizes: List[int] = []
@@ -150,6 +151,7 @@ class OEECalculatorEngine:
                 machine_id = machine["machine_id"]
                 line_id = machine_line.get(machine_id, "LINE-01")
                 ms_key = (machine_id, shift_id)
+                agg_id = f"OEE-{shift_id}-{machine_id}"
 
                 # 1. State Event Durations (Decision EC-01 & EC-05)
                 m_events_raw = events_by_ms.get((shift_id, machine_id), [])
@@ -177,6 +179,13 @@ class OEECalculatorEngine:
 
                 for ev in m_ev_list:
                     if ev["event_id"] in excluded_events:
+                        decision_records.append({
+                            "aggregate_id": agg_id,
+                            "rule_id": "VAL-TIME-001",
+                            "record_id": ev["event_id"],
+                            "decision_applied": "EXCLUDE_INVALID_EVENT",
+                            "metric_affected": "operating_time_sec,availability",
+                        })
                         continue  # EXCLUDE decision applied
 
                     st = ev["state"]
@@ -188,6 +197,13 @@ class OEECalculatorEngine:
                     # The subsequent event start is clipped forward to the prior end timestamp (s_dt = max(s_dt, prev_event_end)),
                     # so operating time, planned break duration, and OEE recover identically to the clean baseline.
                     if prev_event_end is not None and s_dt < prev_event_end:
+                        decision_records.append({
+                            "aggregate_id": agg_id,
+                            "rule_id": "VAL-TIME-002",
+                            "record_id": ev["event_id"],
+                            "decision_applied": "CLIP_START_TO_PREV_END",
+                            "metric_affected": "operating_time_sec,availability,oee",
+                        })
                         s_dt = prev_event_end
 
                     dur = max(0, int((e_dt - s_dt).total_seconds()))
@@ -200,6 +216,14 @@ class OEECalculatorEngine:
                             o_e = min(e_dt, b_e)
                             if o_e > o_s:
                                 overlap_sec += int((o_e - o_s).total_seconds())
+                        if overlap_sec > 0:
+                            decision_records.append({
+                                "aggregate_id": agg_id,
+                                "rule_id": "VAL-TIME-003",
+                                "record_id": ev["event_id"],
+                                "decision_applied": "CLIP_BREAKDOWN_AT_BREAK",
+                                "metric_affected": "unplanned_downtime_sec,planned_prod_time_sec,availability",
+                            })
                         dur = max(0, dur - overlap_sec)
 
                     if e_dt > (prev_event_end or datetime.min.replace(tzinfo=timezone.utc)):
@@ -223,22 +247,42 @@ class OEECalculatorEngine:
 
                 # 2. Production Counts: total_count = sum of count_delta, never final cumulative (Decision EC-02)
                 m_counts_raw = counts_by_ms.get((shift_id, machine_id), [])
-                valid_counts = [
-                    r for r in m_counts_raw
-                    if r["count_id"] not in excluded_counts and (r["count_delta"] >= 0 or r["is_correction"])
-                ]
+                valid_counts = []
+                for r in m_counts_raw:
+                    if r["count_id"] in excluded_counts or (r["count_delta"] < 0 and not r["is_correction"]):
+                        decision_records.append({
+                            "aggregate_id": agg_id,
+                            "rule_id": "VAL-COUNT-001",
+                            "record_id": r["count_id"],
+                            "decision_applied": "EXCLUDE_NON_CORRECTION_DROP",
+                            "metric_affected": "total_count,performance,oee",
+                        })
+                    else:
+                        valid_counts.append(r)
+
                 total_count = sum(int(r["count_delta"]) for r in valid_counts)
                 if total_count < 0:
                     total_count = 0
 
                 # 3. Quality Inspections: Exclude invalid inspection from Q and flag it (not Q=0) (Decision EC-03)
                 m_qc_raw = qc_by_ms.get((shift_id, machine_id), [])
-                valid_qc = [
-                    r for r in m_qc_raw
-                    if r["inspection_id"] not in excluded_qc
-                    and r["scrap_qty"] <= r["inspected_qty"]
-                    and (r["passed_qty"] + r["scrap_qty"] + r["rework_qty"] == r["inspected_qty"])
-                ]
+                valid_qc = []
+                for r in m_qc_raw:
+                    is_invalid = (
+                        r["inspection_id"] in excluded_qc
+                        or r["scrap_qty"] > r["inspected_qty"]
+                        or (r["passed_qty"] + r["scrap_qty"] + r["rework_qty"] != r["inspected_qty"])
+                    )
+                    if is_invalid:
+                        decision_records.append({
+                            "aggregate_id": agg_id,
+                            "rule_id": "VAL-QUAL-001",
+                            "record_id": r["inspection_id"],
+                            "decision_applied": "EXCLUDE_INVALID_INSPECTION",
+                            "metric_affected": "good_count,quality,oee",
+                        })
+                    else:
+                        valid_qc.append(r)
 
                 sampled_inspected = sum(int(r["inspected_qty"]) for r in valid_qc)
                 sampled_passed = sum(int(r["passed_qty"]) for r in valid_qc)
@@ -309,6 +353,25 @@ class OEECalculatorEngine:
                 else:
                     status = AggregateStatus.FLAGGED
 
+                # Log triage decisions for active order takt time or aggregate flagging
+                for f in ms_findings:
+                    if f.rule_id.value == "VAL-PERF-001":
+                        decision_records.append({
+                            "aggregate_id": agg_id,
+                            "rule_id": "VAL-PERF-001",
+                            "record_id": f.record_id,
+                            "decision_applied": "USE_MASTER_CYCLE_TIME",
+                            "metric_affected": "ideal_cycle_time_sec,performance,oee",
+                        })
+                    else:
+                        decision_records.append({
+                            "aggregate_id": agg_id,
+                            "rule_id": f.rule_id.value,
+                            "record_id": f.record_id,
+                            "decision_applied": "FLAG_AGGREGATE_ANOMALOUS" if status == AggregateStatus.ANOMALOUS else "FLAG_AGGREGATE_WARNING",
+                            "metric_affected": "status,exception_count",
+                        })
+
                 # 6. Analytical Equivalence Check: Approved tolerance restored to 1e-6
                 # |(A * P * Q) - ((GoodCount * ICT) / PPT)| <= 1e-6
                 is_equiv, delta = verify_oee_equivalence(
@@ -360,6 +423,19 @@ class OEECalculatorEngine:
             output_csv.parent.mkdir(parents=True, exist_ok=True)
             self._write_csv(output_csv, [a.to_dict() for a in aggregates])
 
+            # Deduplicate and sort decision records deterministically
+            seen_dec = set()
+            unique_decisions = []
+            for d in decision_records:
+                key = (d["aggregate_id"], d["rule_id"], d["record_id"], d["decision_applied"])
+                if key not in seen_dec:
+                    seen_dec.add(key)
+                    unique_decisions.append(d)
+            unique_decisions.sort(key=lambda d: (d["aggregate_id"], d["rule_id"], d["record_id"], d["decision_applied"]))
+
+            decisions_csv = output_csv.parent / "oee_decisions.csv"
+            self._write_csv(decisions_csv, unique_decisions)
+
         summary_meta = {
             "total_aggregates": len(aggregates),
             "total_shifts": len(shift_rows),
@@ -404,7 +480,10 @@ class OEECalculatorEngine:
     def _write_csv(filepath: Path, records: List[Dict[str, Any]]) -> None:
         """Write list of dictionaries to CSV deterministically."""
         if not records:
-            filepath.write_text("", encoding="utf-8")
+            headers = ["aggregate_id", "rule_id", "record_id", "decision_applied", "metric_affected"]
+            with open(filepath, "w", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=headers)
+                writer.writeheader()
             return
         headers = list(records[0].keys())
         with open(filepath, "w", newline="", encoding="utf-8") as f:
